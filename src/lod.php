@@ -1,7 +1,7 @@
 <?php
-
 require_once(dirname(__FILE__) . '/lodinstance.php');
 require_once(dirname(__FILE__) . '/lodresponse.php');
+require_once(dirname(__FILE__) . '/parser.php');
 
 class LOD implements ArrayAccess
 {
@@ -29,8 +29,11 @@ class LOD implements ArrayAccess
     /* The error message from the most recent fetch */
     protected $errMsg = NULL;
 
-    /* The RDF model (map from URIs to LODInstance objects) */
+    /* The RDF model (map from subject URIs to LODInstance objects) */
     protected $model = array();
+
+    /* RDF parser */
+    protected $parser;
 
     public function __construct()
     {
@@ -44,6 +47,8 @@ class LOD implements ArrayAccess
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
         $this->curl = $curl;
+
+        $this->parser = new Parser();
     }
 
     public function __destruct()
@@ -83,9 +88,9 @@ class LOD implements ArrayAccess
         return $response;
     }
 
-    /* Resolve a LOD URI, potentially fetching data;
-    * returns a LODInstance or FALSE on hard error.
-    */
+    /* Resolve a LOD URI, potentially fetching data.
+     * Returns a LODInstance or FALSE on hard error.
+     */
     public function resolve($uri)
     {
         $found = $this->locate($uri);
@@ -98,6 +103,7 @@ class LOD implements ArrayAccess
 
     /* Attempt to locate a subject within the context's model, but don't
      * try to fetch it if it's not present.
+     * Returns a LODInstance or false if the URI doesn't exist in the model.
      */
     public function locate($uri)
     {
@@ -127,9 +133,24 @@ class LOD implements ArrayAccess
     /* Process a LODResponse into the model */
     public function process(LODResponse $response)
     {
-        $instance = new LODInstance($this, $response);
-        $this->model[$response->target] = $instance;
-        return $instance;
+        // get the triples from the response
+        $triples = $this->parser->parse($response->payload, $response->type);
+
+        // add triples to the context's model
+        foreach($triples as $triple)
+        {
+            $subjectUri = $triple['subject'];
+
+            if(!array_key_exists($subjectUri, $this->model))
+            {
+                $this->model[$subjectUri] = new LODInstance($this, $subjectUri);
+            }
+
+            $this->model[$subjectUri]->add($triple);
+        }
+
+        // return the LODInstance for the originally-requested URI
+        return $this->locate($response->target);
     }
 
     /* Property accessors */

@@ -54,7 +54,7 @@ class Parser
                             }
                             if(array_key_exists('datatype', $object))
                             {
-                                $objectValue .= '^^' . $object['datatype'];
+                                $objectValue .= '^^<' . $object['datatype'] . '>';
                             }
                         }
 

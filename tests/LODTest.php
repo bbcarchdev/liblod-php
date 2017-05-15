@@ -14,7 +14,36 @@ use PHPUnit\Framework\TestCase;
 
 final class LODTest extends TestCase
 {
-    function testGetGoodURI()
+    function testGetGoodUri()
+    {
+        $lod = new LOD();
+
+        $uri = 'http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4';
+
+        $lod->fetch($uri);
+
+        $this->assertEquals(200, $lod->status);
+        $this->assertEquals(0, $lod->error);
+        $this->assertEquals(NULL, $lod->errMsg);
+
+        // check we have the expected number of statements
+        $instance = $lod->resolve($uri);
+        $this->assertEquals(17, count($instance->model));
+    }
+
+    function testContentLocation()
+    {
+        $lod = new LOD();
+
+        $uri = 'http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4';
+
+        $lod->fetch($uri);
+
+        $this->assertEquals($uri, $lod->subject);
+        $this->assertEquals('/a75e5495087d4db89eccc6a52cc0e3a4.ttl', $lod->document);
+    }
+
+    function testGetGoodURIDifferentFormats()
     {
         // get Turtle
         $lod = new LOD();
@@ -29,7 +58,7 @@ final class LODTest extends TestCase
 
         // check we have the expected number of statements
         $instanceTurtle = $lod->resolve($turtleUri);
-        $this->assertEquals(366, count($instanceTurtle->model));
+        $this->assertEquals(3, count($instanceTurtle->model));
 
         // get RDF/XML
         $rdfxmlUri = 'http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4.rdf';
@@ -42,7 +71,7 @@ final class LODTest extends TestCase
 
         // check we have the expected number of statements
         $instanceRdfxml = $lod->resolve($rdfxmlUri);
-        $this->assertEquals(366, count($instanceRdfxml->model));
+        $this->assertEquals(3, count($instanceRdfxml->model));
 
         // check that the two parsers produced the same output
         foreach($instanceTurtle->model as $triple)

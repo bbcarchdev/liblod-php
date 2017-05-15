@@ -1,8 +1,6 @@
 <?php
-/* Depending on the internal RDF implementation, this might reasonably
- * be a subclass of some kind of RDFResource class which relates to
- * a subject of a set of triples. Ideally, ArrayAccess and Iterator
- * methods would be provided to allow idioms such as:
+/* Ideally, ArrayAccess and Iterator methods would be provided to allow idioms
+ * such as:
  *
  * * possibly returns an encapsulated array which can be elided to
  *   a string via __toString():-
@@ -16,10 +14,8 @@
  *          echo "this triple is " . $triple . "\n";
  *      }
  */
-
 require_once(dirname(__FILE__) . '/lod.php');
 require_once(dirname(__FILE__) . '/lodresponse.php');
-require_once(dirname(__FILE__) . '/parser.php');
 
 class LODInstance
 {
@@ -29,17 +25,18 @@ class LODInstance
 	/* The subject URI of this instance */
 	protected $uri;
 
-	/* The actual RDF model */
+	/* The actual RDF model (an array of triples in N3.js format) */
 	protected $model;
 
-	public function __construct(LOD $context, LODResponse $response)
+    /* IDs of existing subject+predicate+object triples; this is to check
+       whether a triple exists before adding it to the model */
+    private $tripleIds = array();
+
+	public function __construct(LOD $context, $uri, $internalRdfModel=array())
 	{
         $this->context = $context;
-        $this->uri = $response->target;
-
-        $parser = new Parser();
-
-        $this->model = $parser->parse($response->payload, $response->type);
+        $this->uri = $uri;
+        $this->model = $internalRdfModel;
 	}
 
 	public function __get($name)
@@ -70,6 +67,24 @@ class LODInstance
 		}
 		$this->{$name} = $value;
 	}
+
+    /* Get a unique identifer for a triple */
+    public function getTripleId($triple)
+    {
+        return $triple['subject'] . $triple['predicate'] . $triple['object'];
+    }
+
+    /* Add a triple to the model, but only if it's not an exact duplicate
+       of an existing triple. */
+    public function add($triple)
+    {
+        $tripleId = $this->getTripleId($triple);
+
+        if(!(in_array($tripleId, $this->model)))
+        {
+            $this->model[] = $triple;
+        }
+    }
 
 	/* Return true if the subject exists in the related context */
 	public function exists()

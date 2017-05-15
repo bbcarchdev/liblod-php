@@ -19,6 +19,9 @@ class LODResponse
     // URI requested
 	public $target = NULL;
 
+    // content location
+    public $contentLocation = NULL;
+
     // content type, e.g. 'text/turtle' or 'application/rdf+xml'
 	public $type = NULL;
 

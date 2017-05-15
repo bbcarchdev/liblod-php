@@ -17,7 +17,8 @@ class LOD implements ArrayAccess
     /* The most recently-fetched subject URI */
     protected $subject;
 
-    /* The most recently-fetched document URL */
+    /* The most recently-fetched document URL (content-location or $subject
+       if content-location not set) */
     protected $document;
 
     /* HTTP status from the most recent fetch */
@@ -67,6 +68,24 @@ class LOD implements ArrayAccess
         $response = new LODResponse($this);
         $response->target = $uri;
 
+        // set up handler for headers to set the content location
+        $contentLocation = NULL;
+
+        curl_setopt(
+            $this->curl,
+            CURLOPT_HEADERFUNCTION,
+            function($curl, $headerLine) use(&$contentLocation)
+            {
+                $header = explode(':', $headerLine);
+                if (strtolower(trim($header[0])) === 'content-location')
+                {
+                    $contentLocation = trim($header[1]);
+                }
+                return strlen($headerLine);
+            }
+        );
+
+        // send request
         $raw_response = curl_exec($this->curl);
 
         if($raw_response === FALSE)
@@ -79,6 +98,12 @@ class LOD implements ArrayAccess
             $response->payload = $raw_response;
             $response->status = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
             $response->type = curl_getinfo($this->curl, CURLINFO_CONTENT_TYPE);
+
+            if (!$contentLocation)
+            {
+                $contentLocation = $uri;
+            }
+            $response->contentLocation = $contentLocation;
         }
 
         $this->status = $response->status;
@@ -126,6 +151,10 @@ class LOD implements ArrayAccess
         }
         else
         {
+            // save the subject and document URIs
+            $this->subject = $response->target;
+            $this->document = $response->contentLocation;
+
             return $this->process($response);
         }
     }

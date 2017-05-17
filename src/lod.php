@@ -25,6 +25,13 @@ class LOD implements ArrayAccess
     /* The RDF "index" (map from subject URIs to LODInstance objects) */
     protected $index = array();
 
+    /* Languages we prefer to get literals in (first in the list has highest
+       priority) */
+    protected $languages = array('en-gb', 'en');
+
+    /* RDF prefixes */
+    protected $prefixes = Rdf::PREFIXES;
+
     /* HTTP client */
     protected $httpClient;
 
@@ -93,14 +100,30 @@ class LOD implements ArrayAccess
         // make a graph from the response
         $graph = $this->parser->parse($response->payload, $response->type);
 
-        // add resources from the new graph to this LOD's graph
+        // add resources from the new graph to LODInstances in the index
         foreach($graph->resources() as $subjectUri => $resource)
         {
-            $this->index[$subjectUri] = new LODInstance($this, $resource);
+            if (in_array($subjectUri, $this->index))
+            {
+                $existingInstance = $this->index[$subjectUri];
+                $existingInstance->merge($resource);
+            }
+            else
+            {
+                $instance = new LODInstance($this, $subjectUri, $resource);
+                $this->index[$subjectUri] = $instance;
+            }
         }
 
         // return the LODInstance for the originally-requested URI
         return $this->locate($response->target);
+    }
+
+    /* Set an RDF prefix, which can be used in accessor strings on
+       LODInstances */
+    public function setPrefix($prefix, $uri)
+    {
+        $this->prefixes[$prefix] = $uri;
     }
 
     /* Property accessors */
@@ -120,6 +143,8 @@ class LOD implements ArrayAccess
                 return $this->errMsg;
             case 'triples':
                 return $this->triples();
+            case 'languages':
+                return $this->languages;
         }
         return null;
     }
@@ -133,6 +158,7 @@ class LOD implements ArrayAccess
             case 'status':
             case 'error':
             case 'errMsg':
+            case 'triples':
                 trigger_warning("The LOD::$name property is read-only",
                                 E_USER_WARNING);
                 return;
@@ -192,7 +218,8 @@ class LOD implements ArrayAccess
         trigger_error("LOD array members are read-only", E_USER_NOTICE);
     }
 
-    /* Get all the triples held by this LOD for each subject URI as an array */
+    /* Get all the triples held by this LOD for each subject URI and combine
+       into a single array */
     public function triples()
     {
         $triples = array();

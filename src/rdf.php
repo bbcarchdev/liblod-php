@@ -4,24 +4,56 @@
  */
 class Rdf
 {
+    const PREFIXES = array(
+        'dcmitype' => 'http://purl.org/dc/dcmitype/',
+        'dct' => 'http://purl.org/dc/terms/',
+        'dcterms' => 'http://purl.org/dc/terms/',
+        'foaf' => 'http://xmlns.com/foaf/0.1/',
+        'owl' => 'http://www.w3.org/2002/07/owl#',
+        'rdf' => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+        'rdfs' => 'http://www.w3.org/2000/01/rdf-schema#',
+        'schema' => 'http://schema.org/',
+        'skos' => 'http://www.w3.org/2004/02/skos/core#',
+        'void' => 'http://rdfs.org/ns/void#',
+        'xsd' => 'http://www.w3.org/2001/XMLSchema#'
+    );
+
     /**
      * Convert an EasyRdf_Graph into an array of triples.
      *
      * $graph EasyRdf_Graph
      * $uri: if set, only return triples with $uri as a subject
      *
-     * returns array of triples in N3.js format, e.g. each element looks like:
+     * returns array of triples in this format:
      * {
      *   "subject": "http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4#id",
      *   "predicate": "http://www.w3.org/2000/01/rdf-schema#label",
-     *   "object": "'Judi Dench'@en-gb"
+     *   "object": {
+     *     "value": "Judi Dench",
+     *     "type": "literal",
+     *     "lang": "@en-gb" || "datatype": "http://www.w3.org/2001/XMLSchema#string"
+     *   }
      * }
-     * (see https://github.com/RubenVerborgh/N3.js#triple-representation)
+     *
+     * or
+     *
+     * {
+     *   "subject": "http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4#id",
+     *   "predicate": "http://xmlns.com/foaf/0.1/page",
+     *   "object": {
+     *     "value": "http://en.wikipedia.org/wiki/Judi_Dench",
+     *     "type": "uri"
+     *   }
+     * }
+     *
+     * NB the object value has the same format as produced by
+     * EasyRdf_Graph->toRdfPhp()
      */
     public static function getTriples($graph, $uri=NULL)
     {
         $triples = array();
 
+        // flatten out the PHP RDF produced by EasyRdf_Graph
         foreach($graph->toRdfPhp() as $subjectUri => $properties)
         {
             if($uri && ($subjectUri !== $uri))
@@ -31,28 +63,12 @@ class Rdf
 
             foreach($properties as $propertyUri => $objects)
             {
-                foreach($objects as $object) {
-                    if($object['type'] === 'uri')
-                    {
-                        $objectValue = $object['value'];
-                    }
-                    else
-                    {
-                        $objectValue = '"' . $object['value'] . '"';
-                        if(array_key_exists('lang', $object))
-                        {
-                            $objectValue .= '@' . $object['lang'];
-                        }
-                        else if(array_key_exists('datatype', $object))
-                        {
-                            $objectValue .= '^^<' . $object['datatype'] . '>';
-                        }
-                    }
-
+                foreach($objects as $object)
+                {
                     $triples[] = array(
                         'subject' => $subjectUri,
                         'predicate' => $propertyUri,
-                        'object' => $objectValue
+                        'object' => $object
                     );
                 }
             }

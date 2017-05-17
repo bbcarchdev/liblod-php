@@ -40,11 +40,17 @@ class LODInstance
     /* The wrapped EasyRdf_Resource */
     protected $model;
 
-    public function __construct(LOD $context, EasyRdf_Resource $resource)
+    public function __construct(LOD $context, $uri, EasyRdf_Resource $resource=NULL)
     {
         $this->context = $context;
+        $this->uri = $uri;
+
+        if($resource === NULL)
+        {
+            $resource = new EasyRdf_Resource($this->uri, new EasyRdf_Graph());
+        }
+
         $this->model = $resource;
-        $this->uri = $resource->getUri();
     }
 
     public function __get($name)
@@ -79,6 +85,25 @@ class LODInstance
         $this->{$name} = $value;
     }
 
+    /**
+     * Merge another resource with this instance, providing the resource being
+     * merged has the same URI as this instance.
+     */
+    public function merge(EasyRdf_Resource $resource)
+    {
+        // because EasyRdf doesn't seem to correctly store properties on the
+        // resource, manually extract them from the resource's graph using
+        // the resource URI as a filter
+        $triples = Rdf::getTriples($resource->getGraph(), $resource->getUri());
+
+        foreach($triples as $triple)
+        {
+            $propertyUri = $triple['predicate'];
+            $object = $triple['object'];
+            $this->model->add($propertyUri, $object);
+        }
+    }
+
     /* Return true if the subject exists in the related context */
     public function exists()
     {
@@ -86,7 +111,8 @@ class LODInstance
         return $found !== FALSE;
     }
 
-    /* Return a LODInstance representing the foaf:primaryTopic of the supplied
+    /** TODO
+     * Return a LODInstance representing the foaf:primaryTopic of this
      * instance, if one exists.
      */
     public function primaryTopic()
@@ -97,11 +123,12 @@ class LODInstance
     }
 
     /**
-     * Dump the EasyRdf_Resource content as an array of triples in N3.js
-     * format, including only the triples matching the URI of this instance.
+     * Dump the EasyRdf_Resource content as an array of triples,
+     * including only the triples matching the URI of this instance.
      */
     public function triples()
     {
         return Rdf::getTriples($this->model->getGraph(), $this->uri);
     }
 }
+?>

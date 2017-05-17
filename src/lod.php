@@ -1,19 +1,10 @@
 <?php
 require_once(dirname(__FILE__) . '/lodinstance.php');
-require_once(dirname(__FILE__) . '/lodresponse.php');
+require_once(dirname(__FILE__) . '/httpclient.php');
 require_once(dirname(__FILE__) . '/parser.php');
 
 class LOD implements ArrayAccess
 {
-    /* The cURL handle used for fetches */
-    public $curl;
-
-    /* The HTTP user agent used in requests */
-    public $userAgent = 'liblod/PHP';
-
-    /* The HTTP "Accept" header used in requests */
-    public $accept = 'text/turtle;q=0.95, application/rdf+xml;q=0.5';
-
     /* The most recently-fetched subject URI */
     protected $subject;
 
@@ -33,84 +24,16 @@ class LOD implements ArrayAccess
     /* The RDF model (map from subject URIs to LODInstance objects) */
     protected $model = array();
 
+    /* HTTP client */
+    protected $httpClient;
+
     /* RDF parser */
     protected $parser;
 
     public function __construct()
     {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
-        curl_setopt($curl, CURLOPT_USERAGENT, $this->userAgent);
-
-        $headers = array('Accept: ' . $this->accept);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-
-        $this->curl = $curl;
-
+        $this->httpClient = new HttpClient();
         $this->parser = new Parser();
-    }
-
-    public function __destruct()
-    {
-        if($this->curl) {
-            curl_close($this->curl);
-            $this->curl = NULL;
-        }
-    }
-
-    // perform an HTTP GET and return a LODResponse
-    private function http_get($uri)
-    {
-        curl_setopt($this->curl, CURLOPT_URL, $uri);
-
-        $response = new LODResponse($this);
-        $response->target = $uri;
-
-        // set up handler for headers to set the content location
-        $contentLocation = NULL;
-
-        curl_setopt(
-            $this->curl,
-            CURLOPT_HEADERFUNCTION,
-            function($curl, $headerLine) use(&$contentLocation)
-            {
-                $header = explode(':', $headerLine);
-                if (strtolower(trim($header[0])) === 'content-location')
-                {
-                    $contentLocation = trim($header[1]);
-                }
-                return strlen($headerLine);
-            }
-        );
-
-        // send request
-        $raw_response = curl_exec($this->curl);
-
-        if($raw_response === FALSE)
-        {
-            $response->error = curl_errno($this->curl);
-            $response->errMsg = curl_error($this->curl);
-        }
-        else
-        {
-            $response->payload = $raw_response;
-            $response->status = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
-            $response->type = curl_getinfo($this->curl, CURLINFO_CONTENT_TYPE);
-
-            if (!$contentLocation)
-            {
-                $contentLocation = $uri;
-            }
-            $response->contentLocation = $contentLocation;
-        }
-
-        $this->status = $response->status;
-        $this->error = $response->error;
-        $this->errMsg = $response->errMsg;
-
-        return $response;
     }
 
     /* Resolve a LOD URI, potentially fetching data.
@@ -143,7 +66,11 @@ class LOD implements ArrayAccess
      */
     public function fetch($uri)
     {
-        $response = $this->http_get($uri);
+        $response = $this->httpClient->get($uri);
+
+        $this->status = $response->status;
+        $this->error = $response->error;
+        $this->errMsg = $response->errMsg;
 
         if($response->error)
         {

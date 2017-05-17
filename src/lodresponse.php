@@ -5,31 +5,21 @@
  * automatically.
  */
 
-require_once(dirname(__FILE__) . '/lod.php');
-
 class LODResponse
 {
-    // LOD instance
-    public $context;
-
-	public $status = 0;
-	public $error = 0;
-	public $errMsg = NULL;
+    public $status = 0;
+    public $error = 0;
+    public $errMsg = NULL;
 
     // URI requested
-	public $target = NULL;
+    public $target = NULL;
 
     // content location
     public $contentLocation = NULL;
 
     // content type, e.g. 'text/turtle' or 'application/rdf+xml'
-	public $type = NULL;
+    public $type = NULL;
 
     // response body
-	public $payload = NULL;
-
-	public function __construct(LOD $context)
-	{
-        $this->context = $context;
-	}
+    public $payload = NULL;
 }

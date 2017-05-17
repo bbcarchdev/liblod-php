@@ -105,5 +105,41 @@ final class LODTest extends TestCase
         $this->assertEquals(0, $lod->error);
         $this->assertEquals(NULL, $lod->errMsg);
     }
+
+    function testHtmlAlternateLink()
+    {
+        $lod = new LOD();
+
+        $uri = 'http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4.html';
+
+        $lod->fetch($uri);
+
+        $this->assertEquals(200, $lod->status);
+        $this->assertEquals(0, $lod->error);
+        $this->assertEquals(NULL, $lod->errMsg);
+
+        // check that the originally-requested URI remains as the last-fetched URI
+        $this->assertEquals($uri, $lod->subject);
+
+        // check we have the expected number of statements
+        $instance = $lod->resolve('http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4');
+        $this->assertEquals(17, count($instance->model));
+    }
+
+    function testDbpediaLiteResolveUri()
+    {
+        // test that DBPediaLite URIs can be resolved
+        $lod = new LOD();
+        $instance = $lod->resolve('http://www.dbpedialite.org/things/22308#id');
+        $this->assertEquals(10, count($instance->model));
+    }
+
+    function testDbpediaRedirectFollowed()
+    {
+        // test that redirects (as used by DBPedia) are followed correctly
+        $lod = new LOD();
+        $instance = $lod->resolve('http://dbpedia.org/resource/Oxford');
+        $this->assertEquals(190, count($instance->model));
+   }
 }
 ?>

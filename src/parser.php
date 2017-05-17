@@ -1,5 +1,6 @@
 <?php
 require_once(dirname(__FILE__) . '/../vendor/autoload.php');
+require_once(dirname(__FILE__) . '/rdf.php');
 
 use pietercolpaert\hardf\N3Parser;
 
@@ -18,62 +19,48 @@ class Parser
 
     // $rdf is a string of RDF to parse
     // $type is the mime type of the response being parsed
-    // returns array of triples using the syntax defined at
-    // https://github.com/RubenVerborgh/N3.js#triple-representation
+    //
+    // returns EasyRdf_Graph
     public function parse($rdf, $type)
     {
-        $triples = [];
+        $graph = new EasyRdf_Graph();
 
-        if(preg_match('|^text\/turtle|', $type))
+        if(preg_match('|^text/turtle|', $type))
         {
             // hardf uses the N3.js triple format
+            // so we have to convert it to EasyRdf triples;
+            // note that EasyRdf doesn't support specifying the datatypes for
+            // a literal when adding one to a graph
             $triples = $this->turtleParser->parse($rdf);
-        }
-        else if(preg_match('|^application\/rdf\+xml|', $type))
-        {
-            $graph = new EasyRdf_Graph();
-            $this->rdfxmlParser->parse($graph, $rdf, 'rdfxml', '');
 
-            // EasyRdf doesn't use the N3.js triple format, so we have
-            // to do the conversion
-            foreach($graph->toRdfPhp() as $subjectUri => $properties)
+            foreach($triples as $triple)
             {
-                foreach($properties as $propertyUri => $objects)
-                {
-                    foreach($objects as $object) {
-                        if($object['type'] === 'uri')
-                        {
-                            $objectValue = $object['value'];
-                        }
-                        else
-                        {
-                            $objectValue = '"' . $object['value'] . '"';
-                            if(array_key_exists('lang', $object))
-                            {
-                                $objectValue .= '@' . $object['lang'];
-                            }
-                            if(array_key_exists('datatype', $object))
-                            {
-                                $objectValue .= '^^<' . $object['datatype'] . '>';
-                            }
-                        }
+                $subject = $triple['subject'];
+                $predicate = $triple['predicate'];
+                $object = $triple['object'];
 
-                        $triples[] = array(
-                            'subject' => $subjectUri,
-                            'predicate' => $propertyUri,
-                            'object' => $objectValue,
-                            'graph' => ''
-                        );
-                    }
+                if(Rdf::isLiteral($object))
+                {
+                    $value = Rdf::getLiteralValue($object);
+                    $lang = Rdf::getLiteralLanguage($object);
+                    $graph->addLiteral($subject, $predicate, $value, $lang);
+                }
+                else
+                {
+                    $graph->addResource($subject, $predicate, $object);
                 }
             }
+        }
+        else if(preg_match('|^application/rdf\+xml|', $type))
+        {
+            $this->rdfxmlParser->parse($graph, $rdf, 'rdfxml', '');
         }
         else
         {
             trigger_error('No parser for content type ' . $type);
         }
 
-        return $triples;
+        return $graph;
     }
 }
 ?>

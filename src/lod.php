@@ -2,10 +2,11 @@
 require_once(dirname(__FILE__) . '/lodinstance.php');
 require_once(dirname(__FILE__) . '/httpclient.php');
 require_once(dirname(__FILE__) . '/parser.php');
+require_once(dirname(__FILE__) . '/rdf.php');
 
 class LOD implements ArrayAccess
 {
-    /* The most recently-fetched subject URI */
+    /* The most recently-fetched URI */
     protected $subject;
 
     /* The most recently-fetched document URL (content-location or $subject
@@ -21,8 +22,8 @@ class LOD implements ArrayAccess
     /* The error message from the most recent fetch */
     protected $errMsg = NULL;
 
-    /* The RDF model (map from subject URIs to LODInstance objects) */
-    protected $model = array();
+    /* The RDF "index" (map from subject URIs to LODInstance objects) */
+    protected $index = array();
 
     /* HTTP client */
     protected $httpClient;
@@ -55,8 +56,8 @@ class LOD implements ArrayAccess
      */
     public function locate($uri)
     {
-        $hasUri = array_key_exists($uri, $this->model);
-        return ($hasUri ? $this->model[$uri] : FALSE);
+        $hasUri = array_key_exists($uri, $this->index);
+        return ($hasUri ? $this->index[$uri] : FALSE);
     }
 
     /* Fetch data about a subject over HTTP (irrespective of
@@ -89,20 +90,13 @@ class LOD implements ArrayAccess
     /* Process a LODResponse into the model */
     public function process(LODResponse $response)
     {
-        // get the triples from the response
-        $triples = $this->parser->parse($response->payload, $response->type);
+        // make a graph from the response
+        $graph = $this->parser->parse($response->payload, $response->type);
 
-        // add triples to the context's model
-        foreach($triples as $triple)
+        // add resources from the new graph to this LOD's graph
+        foreach($graph->resources() as $subjectUri => $resource)
         {
-            $subjectUri = $triple['subject'];
-
-            if(!array_key_exists($subjectUri, $this->model))
-            {
-                $this->model[$subjectUri] = new LODInstance($this, $subjectUri);
-            }
-
-            $this->model[$subjectUri]->add($triple);
+            $this->index[$subjectUri] = new LODInstance($this, $resource);
         }
 
         // return the LODInstance for the originally-requested URI
@@ -124,6 +118,8 @@ class LOD implements ArrayAccess
                 return $this->error;
             case 'errMsg':
                 return $this->errMsg;
+            case 'triples':
+                return $this->triples();
         }
         return null;
     }
@@ -194,6 +190,19 @@ class LOD implements ArrayAccess
     public function offsetUnset($name)
     {
         trigger_error("LOD array members are read-only", E_USER_NOTICE);
+    }
+
+    /* Get all the triples held by this LOD for each subject URI as an array */
+    public function triples()
+    {
+        $triples = array();
+
+        foreach($this->index as $subjectUri => $instance)
+        {
+            $triples += Rdf::getTriples($instance->model);
+        }
+
+        return $triples;
     }
 }
 ?>

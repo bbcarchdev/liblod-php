@@ -7,7 +7,6 @@
  * Also note we can't force curl to throw a really bad error to test
  * LOD->error and LOD->errMsg.
  */
-
 require_once(dirname(__FILE__) . '/../src/lod.php');
 
 use PHPUnit\Framework\TestCase;
@@ -18,7 +17,7 @@ final class LODTest extends TestCase
     {
         $lod = new LOD();
 
-        $uri = 'http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4';
+        $uri = 'http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4#id';
 
         $lod->fetch($uri);
 
@@ -26,9 +25,26 @@ final class LODTest extends TestCase
         $this->assertEquals(0, $lod->error);
         $this->assertEquals(NULL, $lod->errMsg);
 
-        // check we have the expected number of statements
+        // check that we can resolve the fetched URI via the LOD instance and
+        // that the RDF looks how we expect
         $instance = $lod->resolve($uri);
-        $this->assertEquals(17, count($instance->model));
+
+        $triples = $instance->triples;
+
+        foreach($triples as $triple)
+        {
+            $this->assertEquals(
+                $uri,
+                $triple['subject'],
+                'Triples should all be about Judi Dench (URI = ' .
+                $uri . ') but was about ' . $triple['subject']
+            );
+        }
+
+        $this->assertEquals(71, count($triples));
+
+        $label = $instance->model->getLiteral('rdfs:label', 'en-gb');
+        $this->assertEquals('Judi Dench', $label, 'Label should be "Judi Dench"');
     }
 
     function testContentLocation()
@@ -58,7 +74,7 @@ final class LODTest extends TestCase
 
         // check we have the expected number of statements
         $instanceTurtle = $lod->resolve($turtleUri);
-        $this->assertEquals(3, count($instanceTurtle->model));
+        $this->assertEquals(3, count($instanceTurtle->triples));
 
         // get RDF/XML
         $rdfxmlUri = 'http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4.rdf';
@@ -71,10 +87,12 @@ final class LODTest extends TestCase
 
         // check we have the expected number of statements
         $instanceRdfxml = $lod->resolve($rdfxmlUri);
-        $this->assertEquals(3, count($instanceRdfxml->model));
+        $this->assertEquals(3, count($instanceRdfxml->triples));
 
         // check that the two parsers produced the same output
-        foreach($instanceTurtle->model as $triple)
+        $turtleTriples = $instanceTurtle->triples;
+        $rdfxmlTriples = $instanceRdfxml->triples;
+        foreach($turtleTriples as $triple)
         {
             // ignore triples which refer to the RDF/XML or Turtle format
             // of the description document, as these only appear for the
@@ -88,7 +106,7 @@ final class LODTest extends TestCase
 
             if (!$badTriple)
             {
-                $this->assertContains($triple, $instanceRdfxml->model);
+                $this->assertContains($triple, $rdfxmlTriples);
             }
         }
     }
@@ -123,7 +141,7 @@ final class LODTest extends TestCase
 
         // check we have the expected number of statements
         $instance = $lod->resolve('http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4');
-        $this->assertEquals(17, count($instance->model));
+        $this->assertEquals(17, count($instance->triples));
     }
 
     function testDbpediaLiteResolveUri()
@@ -131,7 +149,7 @@ final class LODTest extends TestCase
         // test that DBPediaLite URIs can be resolved
         $lod = new LOD();
         $instance = $lod->resolve('http://www.dbpedialite.org/things/22308#id');
-        $this->assertEquals(10, count($instance->model));
+        $this->assertEquals(10, count($instance->triples));
     }
 
     function testDbpediaRedirectFollowed()
@@ -139,7 +157,7 @@ final class LODTest extends TestCase
         // test that redirects (as used by DBPedia) are followed correctly
         $lod = new LOD();
         $instance = $lod->resolve('http://dbpedia.org/resource/Oxford');
-        $this->assertEquals(190, count($instance->model));
+        $this->assertEquals(190, count($instance->triples));
    }
 }
 ?>

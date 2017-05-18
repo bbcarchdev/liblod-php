@@ -186,6 +186,36 @@ class LODInstance implements ArrayAccess, Iterator
 
         $filtered = array_filter($this->model, $fn);
 
+        // sort the results depending on the language of the object literals
+        // so statements in our most-preferred language are first
+        $sortFn = function ($item1, $item2) use($languages)
+        {
+            // if an item isn't a literal, it doesn't have a language,
+            // so it can't be assigned a rank
+            $item1Rank = (
+                $item1->object->isResource() ?
+                    FALSE :
+                    array_search($item1->object->language, $languages)
+            );
+
+            $item2Rank = (
+                $item2->object->isResource() ?
+                    FALSE :
+                    array_search($item2->object->language, $languages)
+            );
+
+            $lowestRank = count($languages);
+
+            // if the language isn't in the array or the item isn't a literal,
+            // set the rank to the lowest
+            $item1Rank = ($item1Rank === FALSE ? $lowestRank : $item1Rank);
+            $item2Rank = ($item2Rank === FALSE ? $lowestRank : $item2Rank);
+
+            return $item1Rank - $item2Rank;
+        };
+
+        usort($filtered, $sortFn);
+
         // create a new LODInstance with the filtered triples and
         // $fromFilter=TRUE
         $instance = new LODInstance($this->context, $this->uri, $filtered, TRUE);
@@ -221,9 +251,15 @@ class LODInstance implements ArrayAccess, Iterator
     // Iterator implementation
     public function current()
     {
-        // TODO if instance is filtered, return the statement's object as
+        // If instance is filtered, return the statement's object as
         // a LODTerm; otherwise return the full LODStatement
-        return $this->model[$this->position];
+        $statement = $this->model[$this->position];
+
+        if($this->fromFilter)
+        {
+            return $statement->object;
+        }
+        return $statement;
     }
 
     public function key()
@@ -244,6 +280,18 @@ class LODInstance implements ArrayAccess, Iterator
     public function valid()
     {
         return isset($this->model[$this->position]);
+    }
+
+    /* Return the subject URI as the string representation of the instance if
+       the instance isn't filtered, or the first value of its first triple
+       if it has been filtered */
+    public function __toString()
+    {
+        if($this->fromFilter && count($this->model) > 0)
+        {
+            return $this->model[0]->object->value;
+        }
+        return $this->uri;
     }
 }
 ?>

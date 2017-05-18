@@ -180,29 +180,31 @@ class LODStatement
         $this->object = $obj;
     }
 
+
     public function __toString()
     {
-        $str = '<' . $this->subject->value . '> ' .
-               '<' . $this->predicate->value . '> ';
+        $str = '<' . $this->subject->__toString() . '> ' .
+               '<' . $this->predicate->__toString() . '> ';
 
         if($this->object->isResource())
         {
-            $str .= '<' . $this->object->value . '>';
+            $objStr = '<' . $this->object->__toString() . '>';
         }
         else
         {
-            $str .= '"' . $this->object->value . '"';
+            $objStr = '"' . $this->object->__toString() . '"';
+
             if($this->object->language)
             {
-                $str .= '@' . $this->object->language;
+                $objStr .= '@' . $this->object->language;
             }
             else if($this->object->datatype)
             {
-                $str .= '^^<' . $this->object->datatype . '>';
+                $objStr .= '^^<' . $this->object->datatype . '>';
             }
         }
 
-        return $str;
+        return $str . $objStr;
     }
 
     /**
@@ -225,6 +227,11 @@ abstract class LODTerm
     }
 
     public abstract function isResource();
+
+    public function __toString()
+    {
+        return $this->value;
+    }
 }
 
 class LODResource extends LODTerm

@@ -46,7 +46,7 @@ class LOD implements ArrayAccess
 
     /* Set an RDF prefix, which can be used in accessor strings on
        LODInstances */
-    public static function setPrefix($prefix, $uri)
+    public function setPrefix($prefix, $uri)
     {
         $this->prefixes[$prefix] = $uri;
     }
@@ -211,7 +211,7 @@ class LOD implements ArrayAccess
 
     public function offsetExists($name)
     {
-        $inst = $this->locate($name);
+        $inst = $this->offsetGet($name);
         return (is_object($inst) && $inst->exists);
     }
 
@@ -223,20 +223,6 @@ class LOD implements ArrayAccess
     public function offsetUnset($name)
     {
         trigger_error("LOD array members are read-only", E_USER_NOTICE);
-    }
-
-    /* Get all the triples held by this LOD for each subject URI and combine
-       into a single array; note that this doesn't do any de-duplication */
-    public function triples()
-    {
-        $triples = array();
-
-        foreach($this->index as $subjectUri => $instance)
-        {
-            $triples += $instance->model;
-        }
-
-        return $triples;
     }
 
     /**

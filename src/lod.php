@@ -6,6 +6,13 @@ require_once(dirname(__FILE__) . '/rdf.php');
 
 class LOD implements ArrayAccess
 {
+    /* Languages we prefer to get literals in (first in the list has highest
+       priority) */
+    public $languages = array('en-gb', 'en');
+
+    /* RDF prefixes */
+    public $prefixes = Rdf::PREFIXES;
+
     /* The most recently-fetched URI */
     protected $subject;
 
@@ -24,13 +31,6 @@ class LOD implements ArrayAccess
 
     /* The RDF "index" (map from subject URIs to LODInstance objects) */
     protected $index = array();
-
-    /* Languages we prefer to get literals in (first in the list has highest
-       priority) */
-    protected $languages = array('en-gb', 'en');
-
-    /* RDF prefixes */
-    protected $prefixes = Rdf::PREFIXES;
 
     /* HTTP client */
     protected $httpClient;
@@ -158,7 +158,6 @@ class LOD implements ArrayAccess
             case 'status':
             case 'error':
             case 'errMsg':
-            case 'triples':
                 trigger_warning("The LOD::$name property is read-only",
                                 E_USER_WARNING);
                 return;
@@ -175,6 +174,7 @@ class LOD implements ArrayAccess
             case 'status':
             case 'error':
             case 'errMsg':
+            case 'triples':
                 trigger_warning("The LOD::$name property is read-only",
                                 E_USER_WARNING);
                 return;
@@ -191,6 +191,7 @@ class LOD implements ArrayAccess
             case 'status':
             case 'error':
             case 'errMsg':
+            case 'triples':
                 return TRUE;
         }
         return FALSE;

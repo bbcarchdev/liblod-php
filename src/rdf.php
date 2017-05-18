@@ -18,6 +18,23 @@ class Rdf
         'xsd' => 'http://www.w3.org/2001/XMLSchema#'
     );
 
+    // if $predicate is in the form <prefix>:<term>, expand into a full URI
+    // using $prefixes (in the same format as PREFIXES)
+    public static function expandPrefix($predicate, $prefixes)
+    {
+        if(substr($predicate, 0, 4) !== 'http')
+        {
+            $parts = explode(':', $predicate);
+            $prefix = $parts[0];
+
+            if(array_key_exists($prefix, $prefixes))
+            {
+                return $prefixes[$prefix] . $parts[1];
+            }
+        }
+        return $predicate;
+    }
+
     /**
      * Convert an EasyRdf_Graph into an array of triples.
      *
@@ -31,7 +48,7 @@ class Rdf
      *   "object": {
      *     "value": "Judi Dench",
      *     "type": "literal",
-     *     "lang": "@en-gb" || "datatype": "http://www.w3.org/2001/XMLSchema#string"
+     *     "lang": "en-gb" || "datatype": "http://www.w3.org/2001/XMLSchema#string"
      *   }
      * }
      *

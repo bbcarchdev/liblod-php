@@ -29,22 +29,19 @@ final class LODTest extends TestCase
         // that the RDF looks how we expect
         $instance = $lod->resolve($uri);
 
-        $triples = $instance->triples;
+        $triples = $instance->model;
 
         foreach($triples as $triple)
         {
             $this->assertEquals(
                 $uri,
-                $triple['subject'],
+                $triple->subject->value,
                 'Triples should all be about Judi Dench (URI = ' .
-                $uri . ') but was about ' . $triple['subject']
+                $uri . ') but one was about ' . $triple->subject->value
             );
         }
 
         $this->assertEquals(71, count($triples));
-
-        $label = $instance->model->getLiteral('rdfs:label', 'en-gb');
-        $this->assertEquals('Judi Dench', $label, 'Label should be "Judi Dench"');
     }
 
     function testContentLocation()
@@ -74,7 +71,6 @@ final class LODTest extends TestCase
 
         // check we have the expected number of statements
         $instanceTurtle = $lod->resolve($turtleUri);
-        $this->assertEquals(3, count($instanceTurtle->triples));
 
         // get RDF/XML
         $rdfxmlUri = 'http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4.rdf';
@@ -85,13 +81,15 @@ final class LODTest extends TestCase
         $this->assertEquals(0, $lod->error);
         $this->assertEquals(NULL, $lod->errMsg);
 
-        // check we have the expected number of statements
         $instanceRdfxml = $lod->resolve($rdfxmlUri);
-        $this->assertEquals(3, count($instanceRdfxml->triples));
+
+        // check we have the expected number of statements
+        $turtleTriples = $instanceTurtle->model;
+        $rdfxmlTriples = $instanceRdfxml->model;
+        $this->assertEquals(3, count($turtleTriples));
+        $this->assertEquals(3, count($rdfxmlTriples));
 
         // check that the two parsers produced the same output
-        $turtleTriples = $instanceTurtle->triples;
-        $rdfxmlTriples = $instanceRdfxml->triples;
         foreach($turtleTriples as $triple)
         {
             // ignore triples which refer to the RDF/XML or Turtle format
@@ -99,10 +97,10 @@ final class LODTest extends TestCase
             // format you requested (i.e. if you request Turtle, you'll only
             // get a dct:hasFormat triple and slot triples for the Turtle
             // representation)
-            $badTriple = (strpos($triple['subject'], $turtleUri) !== FALSE ||
-                          strpos($triple['object'], $turtleUri) !== FALSE ||
-                          strpos($triple['subject'], $rdfxmlUri) !== FALSE ||
-                          strpos($triple['object'], $rdfxmlUri) !== FALSE);
+            $badTriple = (strpos($triple->subject->value, $turtleUri) !== FALSE ||
+                          strpos($triple->object->value, $turtleUri) !== FALSE ||
+                          strpos($triple->subject->value, $rdfxmlUri) !== FALSE ||
+                          strpos($triple->object->value, $rdfxmlUri) !== FALSE);
 
             if (!$badTriple)
             {
@@ -141,7 +139,7 @@ final class LODTest extends TestCase
 
         // check we have the expected number of statements
         $instance = $lod->resolve('http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4');
-        $this->assertEquals(17, count($instance->triples));
+        $this->assertEquals(17, count($instance->model));
     }
 
     function testDbpediaLiteResolveUri()
@@ -149,7 +147,7 @@ final class LODTest extends TestCase
         // test that DBPediaLite URIs can be resolved
         $lod = new LOD();
         $instance = $lod->resolve('http://www.dbpedialite.org/things/22308#id');
-        $this->assertEquals(10, count($instance->triples));
+        $this->assertEquals(10, count($instance->model));
     }
 
     function testDbpediaRedirectFollowed()
@@ -157,7 +155,7 @@ final class LODTest extends TestCase
         // test that redirects (as used by DBPedia) are followed correctly
         $lod = new LOD();
         $instance = $lod->resolve('http://dbpedia.org/resource/Oxford');
-        $this->assertEquals(190, count($instance->triples));
+        $this->assertEquals(190, count($instance->model));
    }
 }
 ?>

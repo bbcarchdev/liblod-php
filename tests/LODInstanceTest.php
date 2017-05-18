@@ -8,48 +8,45 @@ use PHPUnit\Framework\TestCase;
 
 final class LODInstanceTest extends TestCase
 {
-    private $testResource;
+    private $testTriples;
     private $testUri = 'http://foo.bar/';
 
     function setUp()
     {
-        $graph = new EasyRdf_Graph();
-
-        $testResource = $graph->resource($this->testUri);
-        $testResource->addResource('foaf:page', 'http://foo.bar/page1');
-        $testResource->addResource('foaf:page', 'http://foo.bar/page2');
-        $testResource->addResource('rdfs:seeAlso', 'http://foo.bar/page3');
-        $testResource->addLiteral('rdfs:label', 'Yoinch Chettner', 'en-gb');
-
-        $this->testResource = $testResource;
+        $this->testTriples = array(
+            new LODStatement($this->testUri, 'foaf:page', new LODResource('http://foo.bar/page1')),
+            new LODStatement($this->testUri, 'foaf:page', new LODResource('http://foo.bar/page2')),
+            new LODStatement($this->testUri, 'rdfs:seeAlso', new LODResource('http://foo.bar/page3')),
+            new LODStatement($this->testUri, 'rdfs:label', new LODLiteral('Yoinch Chettner', array('lang' => 'en-gb')))
+        );
     }
 
     function testMerge()
     {
         $instance = new LODInstance(new LOD(), $this->testUri);
-        $instance->merge($this->testResource);
-
-        $this->assertEquals(4, count($instance->triples));
+        $instance->merge($this->testTriples);
+        $this->assertEquals(4, count($instance->model));
     }
 
     function testFilter()
     {
-        $instance = new LODInstance(new LOD(), $this->testUri, $this->testResource);
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
+
 
         // basic filter
         $filteredInstance = $instance->filter('foaf:page');
-        $this->assertEquals(2, count($filteredInstance->triples));
+        $this->assertEquals(2, count($filteredInstance->model));
 
-        $expanded = Rdf::expandPrefix('foaf:page', Rdf::PREFIXES);
-        foreach($filteredInstance->triples as $triple)
+        $expanded = Rdf::expandPrefix('foaf:page', Rdf::COMMON_PREFIXES);
+        foreach($filteredInstance->model as $triple)
         {
-            $this->assertEquals($expanded, $triple['predicate']);
+            $this->assertEquals($expanded, $triple->predicate->value);
         }
     }
 
     function testIteration()
     {
-        $instance = new LODInstance(new LOD(), $this->testUri, $this->testResource);
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
 
         $expectedValues = array(
             'http://foo.bar/page1',
@@ -61,7 +58,7 @@ final class LODInstanceTest extends TestCase
         $actualValues = array();
         foreach($instance as $triple)
         {
-            $actualValues[] = $triple['object']['value'];
+            $actualValues[] = $triple->object->value;
         }
 
         $this->assertEquals($expectedValues, $actualValues);
@@ -69,20 +66,20 @@ final class LODInstanceTest extends TestCase
 
     function testArrayAccess()
     {
-        $instance = new LODInstance(new LOD(), $this->testUri, $this->testResource);
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
 
         // single predicate via offsetGet
         $filteredInstance1 = $instance['foaf:page'];
-        $this->assertEquals(2, count($filteredInstance1->triples));
-        $expanded = Rdf::expandPrefix('foaf:page', Rdf::PREFIXES);
-        foreach($filteredInstance1->triples as $triple)
+        $this->assertEquals(2, count($filteredInstance1->model));
+        $expanded = Rdf::expandPrefix('foaf:page', Rdf::COMMON_PREFIXES);
+        foreach($filteredInstance1->model as $triple)
         {
-            $this->assertEquals($expanded, $triple['predicate']);
+            $this->assertEquals($expanded, $triple->predicate->value);
         }
 
         // multiple predicates via offsetGet
         $filteredInstance2 = $instance['foaf:page,rdfs:seeAlso'];
-        $this->assertEquals(3, count($filteredInstance2->triples));
+        $this->assertEquals(3, count($filteredInstance2->model));
 
         // key existence via offsetExists
         $this->assertEquals(FALSE, isset($instance['fo:po']));

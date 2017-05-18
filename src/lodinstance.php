@@ -12,7 +12,7 @@ require_once(dirname(__FILE__) . '/lodresponse.php');
  *
  * The raw triples for the resource represented by this instance are
  * accessible via:
- *   $instance->triples
+ *   $instance->model
  *
  * Ideally, ArrayAccess and Iterator methods would be provided to allow idioms
  * such as:
@@ -37,11 +37,12 @@ class LODInstance implements ArrayAccess, Iterator
     /* The subject URI of this instance */
     protected $uri;
 
-    /* The wrapped EasyRdf_Resource */
+    /* Array of LODStatement objects */
     protected $model;
 
-    /* Cache of the triples in the instance */
-    private $cachedTriples = NULL;
+    /* Generated keys of statements in the model (used to prevent
+       duplicates */
+    protected $statementKeys = array();
 
     // for the iterator
     private $position = 0;
@@ -52,18 +53,12 @@ class LODInstance implements ArrayAccess, Iterator
     // if FALSE, it returns the URI of the LODInstance
     private $fromFilter;
 
-    public function __construct(LOD $context, $uri, EasyRdf_Resource $resource=NULL, $fromFilter=FALSE)
+    public function __construct(LOD $context, $uri, $model=array(), $fromFilter=FALSE)
     {
         $this->context = $context;
         $this->uri = $uri;
+        $this->model = $model;
         $this->fromFilter = $fromFilter;
-
-        if($resource === NULL)
-        {
-            $resource = new EasyRdf_Resource($this->uri, new EasyRdf_Graph());
-        }
-
-        $this->model = $resource;
     }
 
     public function __get($name)
@@ -78,8 +73,6 @@ class LODInstance implements ArrayAccess, Iterator
                 return $this->exists();
             case 'primaryTopic':
                 return $this->primaryTopic();
-            case 'triples':
-                return $this->triples();
         }
     }
 
@@ -91,7 +84,6 @@ class LODInstance implements ArrayAccess, Iterator
             case 'model':
             case 'exists':
             case 'primaryTopic':
-            case 'triples':
                 trigger_warning("The LODInstance::$name property is read-only", E_USER_WARNING);
                 return;
         }
@@ -102,38 +94,25 @@ class LODInstance implements ArrayAccess, Iterator
      * Merge another resource with this instance, providing the resource being
      * merged has the same URI as this instance.
      */
-    public function merge(EasyRdf_Resource $resource)
+    public function merge($statements)
     {
-        // because EasyRdf doesn't seem to correctly store properties on the
-        // resource, manually extract them from the resource's graph using
-        // the resource URI as a filter
-        $triples = Rdf::getTriples($resource->getGraph(), $resource->getUri());
-
-        foreach($triples as $triple)
+        foreach($statements as $statement)
         {
-            $this->add($triple);
+            $this->add($statement);
         }
     }
 
-    public function resetCachedTriples()
-    {
-        $this->cachedTriples = NULL;
-    }
-
     /**
-     * Add a single triple to this LODInstance if it has the same subject URI
-     * as this LODInstance.
-     * $triple is an associative array in the format described in
-     * Rdf::getTriples().
+     * Add a LODStatement, but only if the same subject+predicate+object isn't
+     * already in the model.
      */
-    public function add($triple)
+    public function add($statement)
     {
-        if($triple['subject'] === $this->uri)
+        $key = $statement->getKey();
+        if(!in_array($key, $this->statementKeys))
         {
-            $propertyUri = $triple['predicate'];
-            $object = $triple['object'];
-            $this->model->add($propertyUri, $object);
-            $this->resetCachedTriples();
+            $this->model[] = $statement;
+            $this->statementKeys[] = $key;
         }
     }
 
@@ -153,20 +132,6 @@ class LODInstance implements ArrayAccess, Iterator
         // find the foaf:primaryTopic URI for this instance
 
         // try to retrieve the LODInstance for that URI from the context
-    }
-
-    /**
-     * Dump the EasyRdf_Resource content as an array of triples,
-     * including only the triples matching the URI of this instance.
-     */
-    public function triples()
-    {
-        if($this->cachedTriples === NULL)
-        {
-            $this->cachedTriples = Rdf::getTriples($this->model->getGraph(), $this->uri);
-        }
-
-        return $this->cachedTriples;
     }
 
     /**
@@ -206,29 +171,24 @@ class LODInstance implements ArrayAccess, Iterator
         // get triples which match the query
         $fn = function($item) use($predicates, $languages)
         {
-            $predicateMatches = in_array($item['predicate'], $predicates);
+            $predicateMatches = in_array($item->predicate->value, $predicates);
 
             // if the object has no 'lang' key, we can't compare languages,
             // so we just assume the language is OK
             $langOK = TRUE;
-            if(array_key_exists('lang', $item['object']))
+            if(is_a($item->object, 'LODLiteral') && ($item->object->language !== NULL))
             {
-                $langOK = in_array($item['object']['lang'], $languages);
+                $langOK = in_array($item->object->language, $languages);
             }
 
             return $predicateMatches && $langOK;
         };
 
-        $filtered = array_filter($this->triples, $fn);
+        $filtered = array_filter($this->model, $fn);
 
-        // create a new LODInstance with $fromFilter=TRUE
-        $instance = new LODInstance($this->context, $this->uri, NULL, TRUE);
-
-        // add the filtered triples
-        foreach($filtered as $triple)
-        {
-            $instance->add($triple);
-        }
+        // create a new LODInstance with the filtered triples and
+        // $fromFilter=TRUE
+        $instance = new LODInstance($this->context, $this->uri, $filtered, TRUE);
 
         return $instance;
     }
@@ -236,11 +196,11 @@ class LODInstance implements ArrayAccess, Iterator
     // ArrayAccess implementation
 
     // an offset is assumed to exist if the query returns a LODInstance
-    // with at least one matching triple
+    // with at least one matching LODStatement in its model
     public function offsetExists($query)
     {
         $instance = $this->offsetGet($query);
-        return count($instance->triples) > 0;
+        return count($instance->model) > 0;
     }
 
     public function offsetGet($query)
@@ -261,9 +221,9 @@ class LODInstance implements ArrayAccess, Iterator
     // Iterator implementation
     public function current()
     {
-        // TODO if instance is filtered, return the value of the triple;
-        // otherwise return the full triple
-        return $this->triples[$this->position];
+        // TODO if instance is filtered, return the statement's object as
+        // a LODTerm; otherwise return the full LODStatement
+        return $this->model[$this->position];
     }
 
     public function key()
@@ -283,7 +243,7 @@ class LODInstance implements ArrayAccess, Iterator
 
     public function valid()
     {
-        return isset($this->triples[$this->position]);
+        return isset($this->model[$this->position]);
     }
 }
 ?>

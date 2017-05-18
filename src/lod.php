@@ -10,9 +10,6 @@ class LOD implements ArrayAccess
        priority) */
     public $languages = array('en-gb', 'en');
 
-    /* RDF prefixes */
-    public $prefixes = Rdf::PREFIXES;
-
     /* The most recently-fetched URI */
     protected $subject;
 
@@ -38,10 +35,20 @@ class LOD implements ArrayAccess
     /* RDF parser */
     protected $parser;
 
+    /* RDF prefixes */
+    public $prefixes = Rdf::COMMON_PREFIXES;
+
     public function __construct()
     {
         $this->httpClient = new HttpClient();
         $this->parser = new Parser();
+    }
+
+    /* Set an RDF prefix, which can be used in accessor strings on
+       LODInstances */
+    public static function setPrefix($prefix, $uri)
+    {
+        $this->prefixes[$prefix] = $uri;
     }
 
     /* Resolve a LOD URI, potentially fetching data.
@@ -98,32 +105,28 @@ class LOD implements ArrayAccess
     public function process(LODResponse $response)
     {
         // make a graph from the response
-        $graph = $this->parser->parse($response->payload, $response->type);
+        $triples = $this->parser->parse($response->payload, $response->type);
 
         // add resources from the new graph to LODInstances in the index
-        foreach($graph->resources() as $subjectUri => $resource)
+        foreach($triples as $triple)
         {
-            if (in_array($subjectUri, $this->index))
+            $subjectUri = $triple->subject->value;
+
+            if (isset($this->index[$subjectUri]))
             {
-                $existingInstance = $this->index[$subjectUri];
-                $existingInstance->merge($resource);
+                $instance = $this->index[$subjectUri];
             }
             else
             {
-                $instance = new LODInstance($this, $subjectUri, $resource);
+                $instance = new LODInstance($this, $subjectUri);
                 $this->index[$subjectUri] = $instance;
             }
+
+            $instance->add($triple);
         }
 
         // return the LODInstance for the originally-requested URI
         return $this->locate($response->target);
-    }
-
-    /* Set an RDF prefix, which can be used in accessor strings on
-       LODInstances */
-    public function setPrefix($prefix, $uri)
-    {
-        $this->prefixes[$prefix] = $uri;
     }
 
     /* Property accessors */
@@ -145,6 +148,8 @@ class LOD implements ArrayAccess
                 return $this->triples();
             case 'languages':
                 return $this->languages;
+            case 'prefixes':
+                return $this->prefixes;
         }
         return null;
     }
@@ -158,6 +163,7 @@ class LOD implements ArrayAccess
             case 'status':
             case 'error':
             case 'errMsg':
+            case 'triples':
                 trigger_warning("The LOD::$name property is read-only",
                                 E_USER_WARNING);
                 return;
@@ -220,17 +226,27 @@ class LOD implements ArrayAccess
     }
 
     /* Get all the triples held by this LOD for each subject URI and combine
-       into a single array */
+       into a single array; note that this doesn't do any de-duplication */
     public function triples()
     {
         $triples = array();
 
         foreach($this->index as $subjectUri => $instance)
         {
-            $triples += Rdf::getTriples($instance->model);
+            $triples += $instance->model;
         }
 
         return $triples;
+    }
+
+    /**
+     * Create a LOD statement, using the prefixes currently set on this
+     * context.
+     * See the LODStatement (rdf.php) constructor for details of the arguments.
+     */
+    public function createStatement($subject, $predicate, $object)
+    {
+        return new LODStatement($subject, $predicate, $object, $this->prefixes);
     }
 }
 ?>

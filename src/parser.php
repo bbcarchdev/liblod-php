@@ -23,7 +23,7 @@ class Parser
     // returns EasyRdf_Graph
     public function parse($rdf, $type)
     {
-        $graph = new EasyRdf_Graph();
+        $triplesOut = array();
 
         if(preg_match('|^text/turtle|', $type))
         {
@@ -35,32 +35,36 @@ class Parser
 
             foreach($triples as $triple)
             {
-                $subject = $triple['subject'];
-                $predicate = $triple['predicate'];
+                $subject = new LODResource($triple['subject']);
+                $predicate = new LODResource($triple['predicate']);
                 $object = $triple['object'];
 
                 if(Rdf::isLiteral($object))
                 {
                     $value = Rdf::getLiteralValue($object);
-                    $lang = Rdf::getLiteralLanguage($object);
-                    $graph->addLiteral($subject, $predicate, $value, $lang);
+                    $languageAndType = Rdf::getLiteralLanguageAndDatatype($object);
+                    $obj = new LODLiteral($value, $languageAndType);
                 }
                 else
                 {
-                    $graph->addResource($subject, $predicate, $object);
+                    $obj = new LODResource($object);
                 }
+
+                $triplesOut[] = new LODStatement($subject, $predicate, $obj);
             }
         }
         else if(preg_match('|^application/rdf\+xml|', $type))
         {
+            $graph = new EasyRdf_Graph();
             $this->rdfxmlParser->parse($graph, $rdf, 'rdfxml', '');
+            $triplesOut = Rdf::getTriples($graph);
         }
         else
         {
             trigger_error('No parser for content type ' . $type);
         }
 
-        return $graph;
+        return $triplesOut;
     }
 }
 ?>

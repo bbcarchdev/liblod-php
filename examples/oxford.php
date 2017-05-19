@@ -1,5 +1,6 @@
 <?php
 // API example provided by Mo McRoberts
+// Get the topic "Oxford" and show related web pages
 require_once(dirname(__FILE__) . '/../src/lod.php');
 
 $lod = new LOD();

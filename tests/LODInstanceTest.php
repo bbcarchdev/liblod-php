@@ -1,8 +1,15 @@
 <?php
 require_once(dirname(__FILE__) . '/../vendor/autoload.php');
-require_once(dirname(__FILE__) . '/../src/lod.php');
-require_once(dirname(__FILE__) . '/../src/rdf.php');
-require_once(dirname(__FILE__) . '/../src/lodinstance.php');
+//require_once(dirname(__FILE__) . '/../src/lod.php');
+//require_once(dirname(__FILE__) . '/../src/rdf.php');
+//require_once(dirname(__FILE__) . '/../src/lodinstance.php');
+
+use res\liblod\LOD;
+use res\liblod\LODInstance;
+use res\liblod\Rdf;
+use res\liblod\LODResource;
+use res\liblod\LODLiteral;
+use res\liblod\LODStatement;
 
 use PHPUnit\Framework\TestCase;
 

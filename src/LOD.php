@@ -1,8 +1,14 @@
 <?php
-require_once(dirname(__FILE__) . '/lodinstance.php');
-require_once(dirname(__FILE__) . '/httpclient.php');
-require_once(dirname(__FILE__) . '/parser.php');
-require_once(dirname(__FILE__) . '/rdf.php');
+namespace res\liblod;
+
+require_once(dirname(__FILE__) . '/../vendor/autoload.php');
+
+use res\liblod\LODInstance;
+use res\liblod\HttpClient;
+use res\liblod\Parser;
+use res\liblod\Rdf;
+
+use \ArrayAccess;
 
 class LOD implements ArrayAccess
 {

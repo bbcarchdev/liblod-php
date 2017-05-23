@@ -1,8 +1,15 @@
 <?php
+namespace res\liblod;
+
 require_once(dirname(__FILE__) . '/../vendor/autoload.php');
-require_once(dirname(__FILE__) . '/rdf.php');
+
+use res\liblod\Rdf;
+use res\liblod\LODResource;
+use res\liblod\LODStatement;
 
 use pietercolpaert\hardf\N3Parser;
+use \EasyRdf_Parser_RdfXml;
+use \EasyRdf_Graph;
 
 /*
  * Wrapper round hardf and EasyRDF parsers

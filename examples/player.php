@@ -1,7 +1,9 @@
 <?php
 // API example provided by Mo McRoberts
 // Get the mrss:player triple for a topic
-require_once(dirname(__FILE__) . '/../src/lod.php');
+require_once(dirname(__FILE__) . '/../vendor/autoload.php');
+
+use res\liblod\LOD;
 
 $lod = new LOD();
 $lod->setPrefix('mrss', 'http://search.yahoo.com/mrss/');

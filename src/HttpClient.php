@@ -1,9 +1,13 @@
 <?php
+namespace res\liblod;
+
 require_once(dirname(__FILE__) . '/../vendor/autoload.php');
-require_once(dirname(__FILE__) . '/lodresponse.php');
+
+use res\liblod\LODResponse;
 
 use GuzzleHttp\Psr7\UriResolver;
 use GuzzleHttp\Psr7\Uri;
+use \DOMDocument;
 
 class HttpClient
 {

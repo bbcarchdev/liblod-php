@@ -1,6 +1,19 @@
 {
     "name": "res/liblod-php",
     "version": "0.0.1",
+    "description": "A LOD client library.",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Elliot Smith",
+            "email": "elliot.smith@bbc.co.uk"
+        }
+    ],
+    "autoload": {
+      "psr-4": {
+        "res\\liblod\\": "src/"
+      }
+    },
     "require": {
         "pietercolpaert/hardf": "^0.1.1",
         "easyrdf/easyrdf": "^0.9.1",

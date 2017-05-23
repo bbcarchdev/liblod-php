@@ -1,10 +1,11 @@
 <?php
+namespace res\liblod;
+
 /* A LODResponse is used by a context to encapsulate an HTTP response
  * that can be processed into the model by a LOD context. LODResponses
  * instances are created, processed, and destroyed as part of LOD::fetch()
  * automatically.
  */
-
 class LODResponse
 {
     public $status = 0;

@@ -1,8 +1,14 @@
 <?php
+namespace res\liblod;
+
 require_once(dirname(__FILE__) . '/../vendor/autoload.php');
-require_once(dirname(__FILE__) . '/lod.php');
-require_once(dirname(__FILE__) . '/rdf.php');
-require_once(dirname(__FILE__) . '/lodresponse.php');
+
+use res\liblod\LOD;
+use res\liblod\Rdf;
+use res\liblod\LODResponse;
+
+use \ArrayAccess;
+use \Iterator;
 
 /**
  * Wrapper for an EasyRdf_Resource.

@@ -1,9 +1,13 @@
 <?php
+namespace res\liblod;
+
+require_once(dirname(__FILE__) . '/../vendor/autoload.php');
+
+use res\liblod\LOD;
+
 /**
  * RDF helper functions
  */
-require_once(dirname(__FILE__) . '/lod.php');
-
 class Rdf
 {
     const COMMON_PREFIXES = array(
@@ -133,137 +137,6 @@ class Rdf
             'lang' => $language,
             'datatype' => $datatype
         );
-    }
-}
-
-class LODStatement
-{
-    public $subject;
-    public $predicate;
-    public $object;
-
-    // $objOrSpec can either be a LODTerm instance or an options array like
-    // { 'value' => 'somestring', 'type' => 'uri|literal',
-    //   'datatype' => 'xsd:...' || 'lang' => 'en'}
-    public function __construct($subj, $pred, $objOrSpec, $prefixes=NULL)
-    {
-        if($prefixes === NULL)
-        {
-            $prefixes = Rdf::COMMON_PREFIXES;
-        }
-
-        if(!is_a($subj, 'LODResource'))
-        {
-            $subj = new LODResource(Rdf::expandPrefix($subj, $prefixes));
-        }
-
-        if(!is_a($pred, 'LODResource'))
-        {
-            $pred = new LODResource(Rdf::expandPrefix($pred, $prefixes));
-        }
-
-        if(is_a($objOrSpec, 'LODTerm'))
-        {
-            $obj = $objOrSpec;
-        }
-        else if($objOrSpec['type'] === 'uri')
-        {
-            $obj = new LODResource(Rdf::expandPrefix($objOrSpec['value'], $prefixes));
-        }
-        else
-        {
-            $obj = new LODLiteral($objOrSpec['value'], $objOrSpec);
-        }
-
-        $this->subject = $subj;
-        $this->predicate = $pred;
-        $this->object = $obj;
-    }
-
-
-    public function __toString()
-    {
-        $str = '<' . $this->subject->__toString() . '> ' .
-               '<' . $this->predicate->__toString() . '> ';
-
-        if($this->object->isResource())
-        {
-            $objStr = '<' . $this->object->__toString() . '>';
-        }
-        else
-        {
-            $objStr = '"' . $this->object->__toString() . '"';
-
-            if($this->object->language)
-            {
-                $objStr .= '@' . $this->object->language;
-            }
-            else if($this->object->datatype)
-            {
-                $objStr .= '^^<' . $this->object->datatype . '>';
-            }
-        }
-
-        return $str . $objStr;
-    }
-
-    /**
-     * Generate a key which uniquely-identifies the statement, using
-     * a hash of its subject+predicate+object values + object datatype/lang
-     */
-    public function getKey()
-    {
-        return md5($this->__toString());
-    }
-}
-
-abstract class LODTerm
-{
-    public $value;
-
-    public function __construct($value)
-    {
-        $this->value = $value;
-    }
-
-    public abstract function isResource();
-
-    public function __toString()
-    {
-        return $this->value;
-    }
-}
-
-class LODResource extends LODTerm
-{
-    public function isResource()
-    {
-        return TRUE;
-    }
-}
-
-class LODLiteral extends LODTerm
-{
-    public $datatype = NULL;
-    public $language = NULL;
-
-    public function __construct($value, $spec)
-    {
-        parent::__construct($value);
-
-        if(isset($spec['lang']))
-        {
-            $this->language = $spec['lang'];
-        }
-        else if(isset($spec['datatype']))
-        {
-            $this->datatype = $spec['datatype'];
-        }
-    }
-
-    public function isResource()
-    {
-        return FALSE;
     }
 }
 ?>

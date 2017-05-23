@@ -1,4 +1,6 @@
 {
+    "name": "res/liblod-php",
+    "version": "0.0.1",
     "require": {
         "pietercolpaert/hardf": "^0.1.1",
         "easyrdf/easyrdf": "^0.9.1",

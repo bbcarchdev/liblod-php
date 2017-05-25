@@ -74,4 +74,3 @@ class Parser
         return $triplesOut;
     }
 }
-?>

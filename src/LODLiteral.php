@@ -27,4 +27,3 @@ class LODLiteral extends LODTerm
         return FALSE;
     }
 }
-?>

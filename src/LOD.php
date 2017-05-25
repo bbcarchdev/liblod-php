@@ -241,4 +241,3 @@ class LOD implements ArrayAccess
         return new LODStatement($subject, $predicate, $object, $this->prefixes);
     }
 }
-?>

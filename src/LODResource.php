@@ -10,4 +10,3 @@ class LODResource extends LODTerm
         return TRUE;
     }
 }
-?>

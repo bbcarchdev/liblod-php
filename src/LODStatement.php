@@ -87,4 +87,3 @@ class LODStatement
         return md5($this->__toString());
     }
 }
-?>

@@ -300,4 +300,3 @@ class LODInstance implements ArrayAccess, Iterator
         return $this->uri;
     }
 }
-?>

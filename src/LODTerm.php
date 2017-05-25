@@ -17,4 +17,3 @@ abstract class LODTerm
         return $this->value;
     }
 }
-?>

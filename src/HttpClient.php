@@ -219,4 +219,3 @@ class HttpClient
         return $response;
     }
 }
-?>

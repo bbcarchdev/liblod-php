@@ -1,8 +1,9 @@
 {
-    "name": "res/liblod-php",
+    "name": "res/liblod",
     "version": "0.0.1",
-    "description": "A LOD client library.",
     "type": "project",
+    "license": "Apache v2",
+    "description": "A LOD client library.",
     "authors": [
         {
             "name": "Elliot Smith",

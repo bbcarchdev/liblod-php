@@ -7,9 +7,6 @@
  * Also note we can't force curl to throw a really bad error to test
  * LOD->error and LOD->errMsg.
  */
-//require_once(dirname(__FILE__) . '/../src/lod.php');
-require_once(dirname(__FILE__) . '/../vendor/autoload.php');
-
 use res\liblod\LOD;
 
 use PHPUnit\Framework\TestCase;

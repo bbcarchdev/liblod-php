@@ -1,7 +1,4 @@
 <?php
-//require_once(dirname(__FILE__) . '/../src/rdf.php');
-require_once(dirname(__FILE__) . '/../vendor/autoload.php');
-
 use res\liblod\Rdf;
 
 use PHPUnit\Framework\TestCase;

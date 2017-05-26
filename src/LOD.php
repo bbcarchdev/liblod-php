@@ -1,8 +1,6 @@
 <?php
 namespace res\liblod;
 
-require_once(dirname(__FILE__) . '/../vendor/autoload.php');
-
 use res\liblod\LODInstance;
 use res\liblod\HttpClient;
 use res\liblod\Parser;

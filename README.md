@@ -8,4 +8,4 @@ php tools/composer.phar install
 
 ## Running tests
 
-php tools/phpunit-5.7.19.phar tests/
+php tools/phpunit-5.7.19.phar --bootstrap vendor/autoload.php tests/

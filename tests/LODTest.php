@@ -13,6 +13,35 @@ use PHPUnit\Framework\TestCase;
 
 final class LODTest extends TestCase
 {
+    function testMultipleFetchesMerged()
+    {
+        // on first fetch for a search, a resource will only have a subset of
+        // all the statements RES holds about it (in the search results summary);
+        // on a subsequent fetch of the resource, it should have more statements
+        // associated with it
+        $lod = new LOD();
+
+        $uri = 'http://acropolis.org.uk/?q=shakespeare';
+
+        $resource = $lod->fetch($uri);
+
+        // get the item for the first slot
+        foreach($resource['olo:slot'] as $slot)
+        {
+            $slotUri = "$slot";
+            break;
+        }
+
+        $itemUri = "{$lod[$slotUri]['olo:item']}";
+
+        // resolve the slot URI without a fetch - this gets some minimal data
+        $this->assertEquals(5, count($lod[$itemUri]->model));
+
+        // fetch additional data about the URI and check it's added to the model
+        $lod->fetch($itemUri);
+        $this->assertEquals(10, count($lod[$itemUri]->model));
+    }
+
     function testGetGoodUri()
     {
         $lod = new LOD();

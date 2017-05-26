@@ -16,12 +16,6 @@ use \EasyRdf_Graph;
  */
 class Parser
 {
-    public function __construct()
-    {
-        $this->turtleParser = new N3Parser(array());
-        $this->rdfxmlParser = new EasyRdf_Parser_RdfXml();
-    }
-
     // $rdf is a string of RDF to parse
     // $type is the mime type of the response being parsed
     //
@@ -33,10 +27,14 @@ class Parser
         if(preg_match('|^text/turtle|', $type))
         {
             // hardf uses the N3.js triple format
-            // so we have to convert it to EasyRdf triples;
-            // note that EasyRdf doesn't support specifying the datatypes for
-            // a literal when adding one to a graph
-            $triples = $this->turtleParser->parse($rdf);
+            $parser = new N3Parser(array());
+            $triples = $parser->parse($rdf);
+
+            if(count($triples) === 0)
+            {
+                echo "No triples could be parsed out of that there Turtle RDF\n\n";
+                echo $rdf . "\n";
+            }
 
             foreach($triples as $triple)
             {
@@ -61,7 +59,8 @@ class Parser
         else if(preg_match('|^application/rdf\+xml|', $type))
         {
             $graph = new EasyRdf_Graph();
-            $this->rdfxmlParser->parse($graph, $rdf, 'rdfxml', '');
+            $parser = new EasyRdf_Parser_RdfXml();
+            $parser->parse($graph, $rdf, 'rdfxml', '');
             $triplesOut = Rdf::getTriples($graph);
         }
         else

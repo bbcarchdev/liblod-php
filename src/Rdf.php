@@ -9,16 +9,32 @@ use res\liblod\LOD;
 class Rdf
 {
     const COMMON_PREFIXES = array(
+        'bibo' => 'http://purl.org/ontology/bibo/',
+        'cc' => 'http://creativecommons.org/ns#',
+        'crm' => 'http://www.cidoc-crm.org/cidoc-crm/',
         'dcmitype' => 'http://purl.org/dc/dcmitype/',
         'dct' => 'http://purl.org/dc/terms/',
         'dcterms' => 'http://purl.org/dc/terms/',
+        'exif' => 'http://www.w3.org/2003/12/exif/ns#',
         'foaf' => 'http://xmlns.com/foaf/0.1/',
+        'formats' => 'http://www.w3.org/ns/formats/',
+        'frbr' => 'http://purl.org/vocab/frbr/core#',
+        'geo' => 'http://www.w3.org/2003/01/geo/wgs84_pos#',
+        'lio' => 'http://purl.org/net/lio#',
+        'mrss' => 'http://search.yahoo.com/mrss/',
+        'oa' => 'http://www.w3.org/ns/oa#',
+        'odrl' => 'http://www.w3.org/ns/odrl/2/',
+        'olo' => 'http://purl.org/ontology/olo/core#',
         'owl' => 'http://www.w3.org/2002/07/owl#',
+        'po' => 'http://purl.org/ontology/po/',
         'rdf' => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
         'rdfs' => 'http://www.w3.org/2000/01/rdf-schema#',
         'schema' => 'http://schema.org/',
+        'sioc' => 'http://rdfs.org/sioc/services#',
         'skos' => 'http://www.w3.org/2004/02/skos/core#',
+        'vcard' => 'http://www.w3.org/vcard-rdf/3.0#',
         'void' => 'http://rdfs.org/ns/void#',
+        'wdrs' => 'http://www.w3.org/2007/05/powder-s#',
         'xsd' => 'http://www.w3.org/2001/XMLSchema#'
     );
 

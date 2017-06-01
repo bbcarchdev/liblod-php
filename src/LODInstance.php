@@ -127,15 +127,20 @@ class LODInstance implements ArrayAccess, Iterator
         return $found !== FALSE;
     }
 
-    /** TODO
-     * Return a LODInstance representing the foaf:primaryTopic of this
-     * instance, if one exists.
-     */
-    public function primaryTopic()
+    /* Returns TRUE if this instance has rdf:type <$rdfType> */
+    public function hasType($rdfTypeToMatch)
     {
-        // find the foaf:primaryTopic URI for this instance
+        $rdfTypeToMatch = Rdf::expandPrefix($rdfTypeToMatch);
 
-        // try to retrieve the LODInstance for that URI from the context
+        foreach($this['rdf:type'] as $rdfType)
+        {
+            if($rdfType->value === $rdfTypeToMatch)
+            {
+                return TRUE;
+            }
+        }
+
+        return FALSE;
     }
 
     /**

@@ -35,6 +35,7 @@ class Rdf
         'vcard' => 'http://www.w3.org/vcard-rdf/3.0#',
         'void' => 'http://rdfs.org/ns/void#',
         'wdrs' => 'http://www.w3.org/2007/05/powder-s#',
+        'xhtml' => 'http://www.w3.org/1999/xhtml/vocab#',
         'xsd' => 'http://www.w3.org/2001/XMLSchema#'
     );
 

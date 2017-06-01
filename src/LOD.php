@@ -133,6 +133,31 @@ class LOD implements ArrayAccess
         return $this->locate($response->target);
     }
 
+    /* Fetch an array of URIs which are owl:sameAs the specified URI */
+    public function getSameAs($uri)
+    {
+        // iterate all statements for the LOD instance, looking for those with
+        // subject === URI, predicate === owl:sameAs, object === object resource,
+        // and return an array of the URIs of the object resources
+        $owlSameAsPred = Rdf::expandPrefix('owl:sameAs');
+
+        $sameAsUris = array();
+
+        foreach($this->index as $_ => $instance)
+        {
+            foreach($instance->model as $statement)
+            {
+                if($statement->object->value === $uri &&
+                   $statement->predicate->value === $owlSameAsPred)
+                {
+                    $sameAsUris[] = $statement->subject->value;
+                }
+            }
+        }
+
+        return array_unique($sameAsUris);
+    }
+
     /* Property accessors */
     public function __get($name)
     {

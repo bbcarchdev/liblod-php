@@ -13,6 +13,33 @@ use PHPUnit\Framework\TestCase;
 
 final class LODTest extends TestCase
 {
+    function testGetSameAs()
+    {
+        $lod = new LOD();
+        $uri = 'http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4#id';
+        $lod->fetch($uri);
+
+        $expected = array(
+            'http://data.nytimes.com/N82665294351220674963',
+            'http://data.nytimes.com/dench_judi_per',
+            'http://dbpedia.org/resource/Judi_Dench',
+            'http://rdf.freebase.com/ns/en.judi_dench',
+            'http://rdf.freebase.com/ns/guid.9202a8c04000641f8000000000095614',
+            'http://rdf.freebase.com/ns/m.0lpjn',
+            'http://www.dbpedialite.org/things/85432#id',
+            'http://www.wikidata.org/entity/Q28054'
+        );
+
+        $actual = $lod->getSameAs($uri);
+
+        $this->assertEquals(count($expected), count($actual));
+
+        foreach($expected as $expectedUri)
+        {
+            $this->assertContains($expectedUri, $actual);
+        }
+    }
+
     function testMultipleFetchesMerged()
     {
         // on first fetch for a search, a resource will only have a subset of

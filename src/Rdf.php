@@ -40,7 +40,7 @@ class Rdf
 
     // if $predicate is in the form <prefix>:<term>, expand into a full URI
     // using $prefixes (in the same format as PREFIXES)
-    public static function expandPrefix($predicate, $prefixes)
+    public static function expandPrefix($predicate, $prefixes=NULL)
     {
         if($prefixes === NULL)
         {

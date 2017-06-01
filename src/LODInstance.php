@@ -288,12 +288,20 @@ class LODInstance implements ArrayAccess, Iterator
 
     /* Return the subject URI as the string representation of the instance if
        the instance isn't filtered, or the first value of its first triple
-       if it has been filtered */
+       if it has been filtered, or an empty string if it has been filtered
+       but has no triples */
     public function __toString()
     {
-        if($this->fromFilter && count($this->model) > 0)
+        if($this->fromFilter)
         {
-            return $this->model[0]->object->value;
+            if(count($this->model) > 0)
+            {
+                return $this->model[0]->object->value;
+            }
+            else
+            {
+                return '';
+            }
         }
         return $this->uri;
     }

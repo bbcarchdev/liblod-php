@@ -127,16 +127,23 @@ class LODInstance implements ArrayAccess, Iterator
         return $found !== FALSE;
     }
 
-    /* Returns TRUE if this instance has rdf:type <$rdfType> */
-    public function hasType($rdfTypeToMatch)
+    /* Returns TRUE if this instance has rdf:type <$rdfType>;
+       if multiple types are passed, this returns as soon as one matching
+       type is found */
+    public function hasType(...$rdfTypesToMatch)
     {
-        $rdfTypeToMatch = Rdf::expandPrefix($rdfTypeToMatch);
+        $instanceTypes = $this['rdf:type'];
 
-        foreach($this['rdf:type'] as $rdfType)
+        foreach($rdfTypesToMatch as $rdfTypeToMatch)
         {
-            if($rdfType->value === $rdfTypeToMatch)
+            $rdfTypeToMatch = Rdf::expandPrefix($rdfTypeToMatch);
+
+            foreach($instanceTypes as $rdfType)
             {
-                return TRUE;
+                if($rdfType->value === $rdfTypeToMatch)
+                {
+                    return TRUE;
+                }
             }
         }
 

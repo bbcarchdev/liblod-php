@@ -173,8 +173,8 @@ class LOD implements ArrayAccess
                 return $this->error;
             case 'errMsg':
                 return $this->errMsg;
-            case 'triples':
-                return $this->triples();
+            case 'index':
+                return $this->index;
             case 'languages':
                 return $this->languages;
             case 'prefixes':
@@ -192,7 +192,7 @@ class LOD implements ArrayAccess
             case 'status':
             case 'error':
             case 'errMsg':
-            case 'triples':
+            case 'index':
                 trigger_warning("The LOD::$name property is read-only",
                                 E_USER_WARNING);
                 return;
@@ -209,7 +209,7 @@ class LOD implements ArrayAccess
             case 'status':
             case 'error':
             case 'errMsg':
-            case 'triples':
+            case 'index':
                 trigger_warning("The LOD::$name property is read-only",
                                 E_USER_WARNING);
                 return;
@@ -226,8 +226,8 @@ class LOD implements ArrayAccess
             case 'status':
             case 'error':
             case 'errMsg':
-            case 'triples':
-                return TRUE;
+            case 'index':
+                return isset($this->{$name});
         }
         return FALSE;
     }

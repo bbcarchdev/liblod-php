@@ -1,6 +1,11 @@
 <?php
 namespace res\liblod;
 
+use EasyRdf_Graph;
+use EasyRdf_Parser_Ntriples;
+use EasyRdf_Serialiser_Turtle;
+use EasyRdf_Namespace;
+
 use res\liblod\LOD;
 
 /**
@@ -67,7 +72,7 @@ class Rdf
      * $graph EasyRdf_Graph
      * $uri: if set, only return triples with $uri as a subject
      *
-     * returns array of LODTriples
+     * returns array of LODStatements
      */
     public static function getTriples($graph, $uri=NULL)
     {
@@ -96,6 +101,40 @@ class Rdf
         }
 
         return $triples;
+    }
+
+    // convert a LOD to RDF/Turtle
+    public static function toTurtle($lodORlodinstance)
+    {
+        $statements = NULL;
+
+        if($lodORlodinstance instanceof LOD)
+        {
+            $statements = array();
+            foreach($lodORlodinstance->index as $lodinstance)
+            {
+                $statements = array_merge($statements, $lodinstance->model);
+            }
+        }
+        else
+        {
+            $statements = $lodORlodinstance->model;
+        }
+
+        $rawNtriples = '';
+        foreach($statements as $statement)
+        {
+            $rawNtriples .= "$statement .\n";
+        }
+
+        Rdf::setNamespaces();
+
+        $graph = new EasyRdf_Graph();
+        $parser = new EasyRdf_Parser_Ntriples();
+        $parser->parse($graph, $rawNtriples, 'ntriples', '');
+
+        $serialiser = new EasyRdf_Serialiser_Turtle();
+        return $serialiser->serialise($graph, 'turtle');
     }
 
     // these are adapted from the hardf source, which has a bug which prevents
@@ -152,5 +191,13 @@ class Rdf
             'lang' => $language,
             'datatype' => $datatype
         );
+    }
+
+    public static function setNamespaces($prefixes=Rdf::COMMON_PREFIXES)
+    {
+        foreach($prefixes as $prefix => $fullUri)
+        {
+            EasyRdf_Namespace::set($prefix, $fullUri);
+        }
     }
 }

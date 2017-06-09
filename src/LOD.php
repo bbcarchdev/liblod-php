@@ -133,7 +133,8 @@ class LOD implements ArrayAccess
         return $this->locate($response->target);
     }
 
-    /* Fetch an array of URIs which are owl:sameAs the specified URI */
+    /* Fetch an array of ?sameAs URIs which match the pattern
+       ?sameAs owl:sameAs $uri */
     public function getSameAs($uri)
     {
         // iterate all statements for the LOD instance, looking for those with
@@ -143,7 +144,7 @@ class LOD implements ArrayAccess
 
         $sameAsUris = array();
 
-        foreach($this->index as $_ => $instance)
+        foreach($this->index as $instance)
         {
             foreach($instance->model as $statement)
             {

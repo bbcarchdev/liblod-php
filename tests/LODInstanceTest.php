@@ -19,7 +19,8 @@ final class LODInstanceTest extends TestCase
             new LODStatement($this->testUri, 'foaf:page', new LODResource('http://foo.bar/page1')),
             new LODStatement($this->testUri, 'foaf:page', new LODResource('http://foo.bar/page2')),
             new LODStatement($this->testUri, 'rdfs:seeAlso', new LODResource('http://foo.bar/page3')),
-            new LODStatement($this->testUri, 'rdfs:label', new LODLiteral('Yoinch Chettner', array('lang' => 'en-gb')))
+            new LODStatement($this->testUri, 'rdfs:label', new LODLiteral('Yoinch Chettner', array('lang' => 'en-gb'))),
+            new LODStatement($this->testUri, 'rdf:type', new LODResource('http://purl.org/dc/dcmitype/StillImage'))
         );
     }
 
@@ -27,7 +28,7 @@ final class LODInstanceTest extends TestCase
     {
         $instance = new LODInstance(new LOD(), $this->testUri);
         $instance->merge($this->testTriples);
-        $this->assertEquals(4, count($instance->model));
+        $this->assertEquals(5, count($instance->model));
     }
 
     function testFilter()
@@ -54,7 +55,8 @@ final class LODInstanceTest extends TestCase
             'http://foo.bar/page1',
             'http://foo.bar/page2',
             'http://foo.bar/page3',
-            'Yoinch Chettner'
+            'Yoinch Chettner',
+            'http://purl.org/dc/dcmitype/StillImage'
         );
 
         $actualValues = array();
@@ -86,6 +88,22 @@ final class LODInstanceTest extends TestCase
         // key existence via offsetExists
         $this->assertEquals(FALSE, isset($instance['fo:po']));
         $this->assertEquals(TRUE, isset($instance['foaf:page']));
+    }
+
+    function testHasType()
+    {
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
+
+        $this->assertEquals(TRUE, $instance->hasType('http://purl.org/dc/dcmitype/StillImage'));
+
+        // matching one type out of several
+        $this->assertEquals(TRUE, $instance->hasType('http://foo.bar/thing', 'http://purl.org/dc/dcmitype/StillImage'));
+
+        // not matching any
+        $this->assertEquals(FALSE, $instance->hasType('http://foo.bar/thing'));
+
+        // matching on short form
+        $this->assertEquals(TRUE, $instance->hasType('dcmitype:StillImage'));
     }
 }
 ?>

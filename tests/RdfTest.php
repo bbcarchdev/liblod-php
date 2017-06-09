@@ -33,4 +33,11 @@ final class RdfTest extends TestCase
         $actual = Rdf::getLiteralValue($str);
         $this->assertEquals($expected, $actual);
     }
+
+    public function testExpandPrefix()
+    {
+        $expected = 'http://purl.org/dc/dcmitype/StillImage';
+        $actual = Rdf::expandPrefix('dcmitype:StillImage');
+        $this->assertEquals($expected, $actual);
+    }
 }

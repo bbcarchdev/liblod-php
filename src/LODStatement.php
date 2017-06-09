@@ -63,7 +63,7 @@ class LODStatement
         }
         else
         {
-            $objStr = '"' . $this->object->__toString() . '"';
+            $objStr = json_encode($this->object->__toString());
 
             if($this->object->language)
             {

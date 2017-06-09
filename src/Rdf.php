@@ -18,6 +18,7 @@ class Rdf
         'cc' => 'http://creativecommons.org/ns#',
         'crm' => 'http://www.cidoc-crm.org/cidoc-crm/',
         'dcmitype' => 'http://purl.org/dc/dcmitype/',
+        'dc' => 'http://purl.org/dc/terms/',
         'dct' => 'http://purl.org/dc/terms/',
         'dcterms' => 'http://purl.org/dc/terms/',
         'exif' => 'http://www.w3.org/2003/12/exif/ns#',

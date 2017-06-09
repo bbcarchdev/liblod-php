@@ -3,16 +3,18 @@ namespace res\liblod;
 
 use res\liblod\LODResponse;
 
-use GuzzleHttp\Psr7\UriResolver;
-use GuzzleHttp\Psr7\Uri;
+use \GuzzleHttp\Psr7\UriResolver;
+use \GuzzleHttp\Psr7\Uri;
+use \GuzzleHttp\Client as GuzzleClient;
+use \GuzzleHttp\Exception\ClientException;
 use \DOMDocument;
 
 class HttpClient
 {
     const RDF_TYPES = array('text/turtle', 'application/rdf+xml');
 
-    /* The cURL handle used for fetches */
-    public $curl;
+    /* Guzzle client */
+    private $client;
 
     /* The HTTP user agent used in requests */
     public $userAgent = 'liblod/PHP';
@@ -25,24 +27,7 @@ class HttpClient
 
     public function __construct()
     {
-        $curl = curl_init();
-        //curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);
-        //curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($curl, CURLOPT_USERAGENT, $this->userAgent);
-
-        $headers = array('Accept: ' . $this->accept);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-
-        $this->curl = $curl;
-    }
-
-    public function __destruct()
-    {
-        if($this->curl) {
-            curl_close($this->curl);
-            $this->curl = NULL;
-        }
+        $this->client = new GuzzleClient();
     }
 
     // returns TRUE if $typeValue matches one of the values in self::RDF_TYPES
@@ -93,127 +78,108 @@ class HttpClient
             $location = UriResolver::resolve($base, $rel);
         }
 
-        return $location;
+        return "$location";
+    }
+
+    // convert Guzzle response $rawResponse to LODResponse
+    private function convertResponse($uri, $rawResponse)
+    {
+        // this should be set in conditional below
+        $response = NULL;
+
+        $status = $rawResponse->getStatusCode();
+
+        // bad response
+        if($status >= 500)
+        {
+            $response = new LODResponse();
+            $response->target = $uri;
+            $response->error = 1;
+            $response->status = $status;
+            $response->errMsg = $rawResponse->getReasonPhrase();
+        }
+        // intelligible response, convert it
+        else
+        {
+            $response = new LODResponse();
+            $response->target = $uri;
+            $response->payload = $rawResponse->getBody()->getContents();
+            $response->status = $status;
+            $response->type = $rawResponse->getHeader('Content-Type')[0];
+
+            $contentLocation = $rawResponse->getHeader('Content-Location');
+            if($contentLocation)
+            {
+                $contentLocation = $contentLocation[0];
+            }
+            else
+            {
+                $contentLocation = $uri;
+            }
+            $response->contentLocation = $contentLocation;
+        }
+
+        return $response;
     }
 
     // perform an HTTP GET and return a LODResponse
     // $uri = URI to fetch
     // these two arguments are used to manage recursive calls:
-    // $numRedirects = number of redirects we've already tried to follow
     // $originalUri = original URI we were trying to get (to
     // track through redirects)
-    public function get($uri, $numRedirects=0, $originalUri=NULL)
+    public function get($uri, $originalUri=NULL)
     {
         if(!$originalUri)
         {
             $originalUri = $uri;
         }
 
-        // already too many redirects, early return
-        if($numRedirects > $this->maxRedirects)
+        $options = array(
+            'allow_redirects' => array(
+                'max' => $this->maxRedirects
+            ),
+            'headers' => array(
+                'Accept' => $this->accept,
+                'User-Agent' => $this->userAgent
+            )
+        );
+
+        try
+        {
+            $rawResponse = $this->client->get($uri, $options);
+        }
+        catch(\GuzzleHttp\Exception\ClientException $e)
         {
             $response = new LODResponse();
-            $response->target = $originalUri;
-            $response->error = CURLE_TOO_MANY_REDIRECTS;
-            $response->errMsg = 'Too many redirects; max. is ' .
-                                $this->maxRedirects;
+            $response->target = $uri;
+            $response->error = 1;
+            $response->errMsg = $e->getMessage();
             return $response;
         }
 
-        // below redirect limit, so do the fetch
-        curl_setopt($this->curl, CURLOPT_URL, $uri);
-
-        // set up handler for headers to get the content location
-        $contentLocation = NULL;
-
-        curl_setopt(
-            $this->curl,
-            CURLOPT_HEADERFUNCTION,
-            function($curl, $headerLine) use(&$contentLocation)
-            {
-                $header = explode(':', $headerLine);
-                $headerName = strtolower(trim($header[0]));
-                if ($headerName === 'content-location')
-                {
-                    $contentLocation = trim($header[1]);
-                }
-
-                return strlen($headerLine);
-            }
-        );
-
-        // send request
-        $raw_response = curl_exec($this->curl);
-
-        // this should be set below
-        $response = NULL;
-
-        // no response
-        if($raw_response === FALSE)
+        $contentType = $rawResponse->getHeader('Content-Type');
+        if($contentType)
         {
-            $response = new LODResponse();
-            $response->target = $originalUri;
-            $response->error = curl_errno($this->curl);
-            $response->errMsg = curl_error($this->curl);
+            $contentType = $contentType[0];
         }
-        // intelligible response, parse it
+
+        $isHtml = ($rawResponse->getStatusCode() === 200 &&
+                   preg_match('|text/html|', $contentType));
+
+        if($isHtml)
+        {
+            // get <link> out of HTML page and fetch that instead
+            $html = $rawResponse->getBody()->getContents();
+            $location = $this->getRdfLink($html, $uri);
+
+            if($location)
+            {
+                return $this->get($location, $originalUri);
+            }
+        }
         else
         {
-            $status = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
-            $type = curl_getinfo($this->curl, CURLINFO_CONTENT_TYPE);
-
-            // 300 code or HTML page with <link> in it - follow redirect
-            $isRedirect = ($status >= 300 && $status <= 399);
-            $isHtml = ($status === 200 && preg_match('|text/html|', $type));
-
-            if($isRedirect || $isHtml)
-            {
-                $location = NULL;
-
-                if($isHtml)
-                {
-                    // get <link> out of HTML page and fetch that instead
-                    $location = $this->getRdfLink($raw_response, $uri);
-                }
-                else
-                {
-                    // get Location header
-                    $location = curl_getinfo($this->curl, CURLINFO_REDIRECT_URL);
-                }
-
-                if($location)
-                {
-                    $numRedirects += 1;
-                    $response = $this->get($location, $numRedirects, $originalUri);
-                }
-                else
-                {
-                    $response = new LODResponse();
-                    $response->target = $originalUri;
-
-                    // not sure if this error code is appropriate...
-                    $response->error = CURLE_GOT_NOTHING;
-
-                    $response->errMsg = 'Got redirect but no location';
-                }
-            }
-            // any other response
-            else
-            {
-                $response = new LODResponse();
-                $response->target = $originalUri;
-                $response->payload = $raw_response;
-                $response->status = $status;
-                $response->type = $type;
-
-                if(!$contentLocation)
-                {
-                    $contentLocation = $uri;
-                }
-                $response->contentLocation = $contentLocation;
-            }
+            return $this->convertResponse($originalUri, $rawResponse);
         }
-
-        return $response;
     }
 }

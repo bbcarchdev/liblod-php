@@ -173,9 +173,7 @@ final class LODTest extends TestCase
 
         $lod->fetch($uri);
 
-        $this->assertEquals(404, $lod->status);
-        $this->assertEquals(0, $lod->error);
-        $this->assertEquals(NULL, $lod->errMsg);
+        $this->assertEquals(1, $lod->error);
     }
 
     function testHtmlAlternateLink()

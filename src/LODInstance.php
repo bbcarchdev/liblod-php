@@ -150,6 +150,13 @@ class LODInstance implements ArrayAccess, Iterator
         return FALSE;
     }
 
+    /* Return the URI of the foaf:primaryTopic for the given $uri, or
+       NULL if $uri isn't in the LOD */
+    public function primaryTopic($uri)
+    {
+        return "{$this['foaf:primaryTopic']}";
+    }
+
     /**
      * Create a new LODInstance containing a subset of the triples
      * in this one whose predicates match the provided query.

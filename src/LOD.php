@@ -101,7 +101,14 @@ class LOD implements ArrayAccess
             $this->subject = $response->target;
             $this->document = $response->contentLocation;
 
-            return $this->process($response);
+            if(empty($response))
+            {
+                return FALSE;
+            }
+            else
+            {
+                return $this->process($response);
+            }
         }
     }
 

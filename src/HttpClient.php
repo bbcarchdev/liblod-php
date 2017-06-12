@@ -148,7 +148,7 @@ class HttpClient
         {
             $rawResponse = $this->client->get($uri, $options);
         }
-        catch(\GuzzleHttp\Exception\ClientException $e)
+        catch(\GuzzleHttp\Exception\GuzzleException $e)
         {
             $response = new LODResponse();
             $response->target = $uri;

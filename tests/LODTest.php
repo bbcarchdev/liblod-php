@@ -11,6 +11,17 @@ use res\liblod\LOD;
 
 use PHPUnit\Framework\TestCase;
 
+const TURTLE = <<<TURTLE
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+
+<http://foo.bar/something>
+  dcterms:title "Bar" ;
+  rdfs:label "Foo" ;
+  schema:name "Baz" .
+TURTLE;
+
 final class LODTest extends TestCase
 {
     function testGetSameAs()
@@ -62,11 +73,14 @@ final class LODTest extends TestCase
         $itemUri = "{$lod[$slotUri]['olo:item']}";
 
         // resolve the slot URI without a fetch - this gets some minimal data
-        $this->assertEquals(5, count($lod[$itemUri]->model));
+        $this->assertEquals(4, count($lod[$itemUri]->model),
+                            'should be 4 triples for ' . $itemUri);
 
         // fetch additional data about the URI and check it's added to the model
         $lod->fetch($itemUri);
-        $this->assertEquals(10, count($lod[$itemUri]->model));
+        $this->assertEquals(17, count($lod[$itemUri]->model),
+                            'should be 17 triples for ' . $itemUri .
+                            ' after merge');
     }
 
     function testGetGoodUri()
@@ -97,7 +111,8 @@ final class LODTest extends TestCase
             );
         }
 
-        $this->assertEquals(71, count($triples));
+        $this->assertEquals(85, count($triples),
+                            "should be 85 triples for $uri");
     }
 
     function testContentLocation()
@@ -193,7 +208,7 @@ final class LODTest extends TestCase
 
         // check we have the expected number of statements
         $instance = $lod->resolve('http://acropolis.org.uk/a75e5495087d4db89eccc6a52cc0e3a4');
-        $this->assertEquals(17, count($instance->model));
+        $this->assertEquals(33, count($instance->model));
     }
 
     function testDbpediaLiteResolveUri()
@@ -210,6 +225,14 @@ final class LODTest extends TestCase
         $lod = new LOD();
         $instance = $lod->resolve('http://dbpedia.org/resource/Oxford');
         $this->assertEquals(190, count($instance->model));
-   }
+    }
+
+    function testLoadRdfTurtle()
+    {
+        $lod = new LOD();
+        $lod->loadRdf(TURTLE, 'text/turtle');
+        $lodinstance = $lod->resolve('http://foo.bar/something');
+        $this->assertEquals(3, count($lodinstance->model));
+    }
 }
 ?>

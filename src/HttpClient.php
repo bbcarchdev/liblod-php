@@ -5,6 +5,8 @@ use res\liblod\LODResponse;
 
 use \GuzzleHttp\Psr7\UriResolver;
 use \GuzzleHttp\Psr7\Uri;
+use \GuzzleHttp\Psr7\Request;
+use \GuzzleHttp\Pool;
 use \GuzzleHttp\Client as GuzzleClient;
 use \GuzzleHttp\Exception\ClientException;
 use \DOMDocument;
@@ -123,18 +125,44 @@ class HttpClient
     }
 
     // perform an HTTP GET and return a LODResponse
-    // $uri = URI to fetch
-    // these two arguments are used to manage recursive calls:
-    // $originalUri = original URI we were trying to get (to
-    // track through redirects)
-    public function get($uri, $originalUri=NULL)
+    // $uri: URI to fetch
+    public function get($uri)
     {
-        if(!$originalUri)
+        $lodresponses = $this->getAll(array(
+            array('uri' => $uri, 'originalUri' => $uri)
+        ));
+
+        return $lodresponses[0];
+    }
+
+    // $requestSpecs: array of arrays in format
+    // {'uri' => uri to fetch, 'originalUri' => original URI which led to this fetching this one}
+    // or array of URIs (which get converted to this format)
+    // 'originalUri' is used when fetching the alternate RDF representation of
+    // an HTML page
+    function getAll($requestSpecsOrUris)
+    {
+        $requestSpecs = array();
+        foreach($requestSpecsOrUris as $requestSpecOrUri)
         {
-            $originalUri = $uri;
+            if(is_string($requestSpecOrUri))
+            {
+                $requestSpecs[] = array(
+                    'uri' => $requestSpecOrUri,
+                    'originalUri' => $requestSpecOrUri
+                );
+            }
+            else
+            {
+                if(empty($requestSpecOrUri['originalUri']))
+                {
+                    $requestSpecOrUri['originalUri'] = $requestSpecOrUri['uri'];
+                }
+                $requestSpecs[] = $requestSpecOrUri;
+            }
         }
 
-        $options = array(
+        $requestOptions = array(
             'allow_redirects' => array(
                 'max' => $this->maxRedirects
             ),
@@ -144,42 +172,94 @@ class HttpClient
             )
         );
 
-        try
+        $requests = array();
+        foreach($requestSpecs as $requestSpec)
         {
-            $rawResponse = $this->client->get($uri, $options);
-        }
-        catch(\GuzzleHttp\Exception\GuzzleException $e)
-        {
-            $response = new LODResponse();
-            $response->target = $uri;
-            $response->error = 1;
-            $response->errMsg = $e->getMessage();
-            return $response;
+            $uri = $requestSpec['uri'];
+            $requests[] = new Request('GET', $uri, $requestOptions['headers']);
         }
 
-        $contentType = $rawResponse->getHeader('Content-Type');
-        if($contentType)
+        // array of LODResponse objects
+        $lodresponses = array();
+
+        // array of URIs which need to be re-fetched because they are
+        // RDF variants extracted from <link> elements in HTML pages
+        $needsFetch = array();
+
+        // build the pool to send the requests in parallel; need some closures
+        // to deal with responses as they arrive
+        $fulfilledFn = function($response, $index) use($requestSpecs, &$lodresponses, &$needsFetch)
         {
-            $contentType = $contentType[0];
-        }
+            $uri = $requestSpecs[$index]['uri'];
+            $originalUri = $requestSpecs[$index]['originalUri'];
 
-        $isHtml = ($rawResponse->getStatusCode() === 200 &&
-                   preg_match('|text/html|', $contentType));
-
-        if($isHtml)
-        {
-            // get <link> out of HTML page and fetch that instead
-            $html = $rawResponse->getBody()->getContents();
-            $location = $this->getRdfLink($html, $uri);
-
-            if($location)
+            $contentType = $response->getHeader('Content-Type');
+            if($contentType)
             {
-                return $this->get($location, $originalUri);
+                $contentType = $contentType[0];
             }
-        }
-        else
+
+            $isHtml = ($response->getStatusCode() === 200 &&
+                       preg_match('|text/html|', $contentType));
+
+            if($isHtml)
+            {
+                // get <link> out of HTML page and fetch that instead
+                $html = $response->getBody()->getContents();
+                $location = $this->getRdfLink($html, $uri);
+
+                if($location)
+                {
+                    $needsFetch[] = array(
+                        'uri' => $location,
+                        'originalUri' => $uri
+                    );
+                }
+                else
+                {
+                    $lodresponse = new LODResponse();
+                    $lodresponse->target = $uri;
+                    $lodresponse->error = 1;
+                    $lodresponse->errMsg = 'HTML page but not RDF link';
+                    $lodresponses[$index] = $lodresponse;
+                }
+            }
+            else
+            {
+                $lodresponse = $this->convertResponse($originalUri, $response);
+                $lodresponses[$index] = $lodresponse;
+            }
+        };
+
+        $rejectedFn = function($reason, $index) use(&$lodresponses, $requestSpecs)
         {
-            return $this->convertResponse($originalUri, $rawResponse);
+            $lodresponse = new LODResponse();
+            $lodresponse->target = $requestSpecs[$index]['uri'];
+            $lodresponse->error = 1;
+            $lodresponse->errMsg = $reason;
+            $lodresponses[$index] = $lodresponse;
+        };
+
+        $options = array(
+            'concurrency' => 10,
+            'fulfilled' => $fulfilledFn,
+            'rejected' => $rejectedFn
+        );
+
+        $pool = new Pool($this->client, $requests, $options);
+
+        // wait for all responses to be returned
+        $pool->promise()->wait();
+
+        // fetch the RDF variants of HTML pages
+        if(count($needsFetch) > 0)
+        {
+            $lodresponses = array_merge(
+                $lodresponses,
+                $this->getAll($needsFetch)
+            );
         }
+
+        return $lodresponses;
     }
 }

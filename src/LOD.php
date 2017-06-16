@@ -86,37 +86,32 @@ class LOD implements ArrayAccess
     public function fetch($uri)
     {
         $response = $this->httpClient->get($uri);
+        $this->process($response);
+        return $this->locate($uri);
+    }
 
-        $this->status = $response->status;
-        $this->error = $response->error;
-        $this->errMsg = $response->errMsg;
+    /* Fetch multiple URIs; NB this doesn't return anything, but just
+       sets up the graph quickly ready for querying later;
+       $uris is an array of URIs to fetch;
+       $this->status, $this->error and $this->errMsg are set from the
+       last-fetched URI; returns TRUE if all responses were successful,
+       FALSE otherwise */
+    public function fetchAll($uris)
+    {
+        $responses = $this->httpClient->getAll($uris);
 
-        if($response->error)
+        foreach($responses as $response)
         {
-            return FALSE;
-        }
-        else
-        {
-            // save the subject and document URIs
-            $this->subject = $response->target;
-            $this->document = $response->contentLocation;
-
-            if(empty($response))
-            {
-                return FALSE;
-            }
-            else
-            {
-                return $this->process($response);
-            }
+            $this->process($response);
         }
     }
 
-    /* Process a LODResponse into the model */
-    public function process(LODResponse $response)
+    /* Manually load some RDF into the model;
+       type should be 'text/turtle' or 'application/rdf+xml' */
+    public function loadRdf($rdf, $type)
     {
         // make a graph from the response
-        $triples = $this->parser->parse($response->payload, $response->type);
+        $triples = $this->parser->parse($rdf, $type);
 
         // add resources from the new graph to LODInstances in the index
         foreach($triples as $triple)
@@ -135,9 +130,36 @@ class LOD implements ArrayAccess
 
             $instance->add($triple);
         }
+    }
 
-        // return the LODInstance for the originally-requested URI
-        return $this->locate($response->target);
+    /* Process a LODResponse into the model; return the LODInstance, or FALSE
+       if the fetch failed */
+    public function process(LODResponse $response)
+    {
+        $this->status = $response->status;
+        $this->error = $response->error;
+        $this->errMsg = $response->errMsg;
+
+        if($response->error)
+        {
+            return FALSE;
+        }
+        else
+        {
+            // save the subject and document URIs
+            $this->subject = $response->target;
+            $this->document = $response->contentLocation;
+
+            if(empty($response))
+            {
+                return FALSE;
+            }
+        }
+
+        // make a graph from the response
+        $this->loadRdf($response->payload, $response->type);
+
+        return TRUE;
     }
 
     /* Fetch an array of ?sameAs URIs which match the pattern

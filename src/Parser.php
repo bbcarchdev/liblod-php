@@ -17,7 +17,8 @@ use \EasyRdf_Graph;
 class Parser
 {
     // $rdf is a string of RDF to parse
-    // $type is the mime type of the response being parsed
+    // $type is the mime type of the response being parsed; one of
+    // text/turtle, application/rdf+xml
     //
     // returns EasyRdf_Graph
     public function parse($rdf, $type)

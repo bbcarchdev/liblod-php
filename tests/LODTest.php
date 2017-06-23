@@ -111,8 +111,8 @@ final class LODTest extends TestCase
             );
         }
 
-        $this->assertEquals(85, count($triples),
-                            "should be 85 triples for $uri");
+        $this->assertEquals(87, count($triples),
+                            "should be 87 triples for $uri");
     }
 
     function testContentLocation()

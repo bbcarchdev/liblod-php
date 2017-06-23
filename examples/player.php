@@ -1,7 +1,7 @@
 <?php
 // API example provided by Mo McRoberts
 // Get the mrss:player triple for a topic
-require_once(dirname(__FILE__) . '/../vendor/autoload.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 use res\liblod\LOD;
 
@@ -27,9 +27,9 @@ if(isset($instance['mrss:player']))
   echo "Playable media:\n";
   foreach($instance['mrss:player'] as $value)
   {
+    // we don't care about `mrss:player` triples where the object is not a resource
     if($value->isResource())
     {
-       // we don't care about `mrss:player` triples where the object is not a resource
        echo "• <$value>\n";
     }
   }

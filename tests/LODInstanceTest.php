@@ -19,9 +19,11 @@ final class LODInstanceTest extends TestCase
             new LODStatement($this->testUri, 'foaf:page', new LODResource('http://foo.bar/page1')),
             new LODStatement($this->testUri, 'foaf:page', new LODResource('http://foo.bar/page2')),
             new LODStatement($this->testUri, 'rdfs:seeAlso', new LODResource('http://foo.bar/page3')),
-            new LODStatement($this->testUri, 'rdfs:label', new LODLiteral('Yoinch Chettner', array('lang' => 'en-gb'))),
             new LODStatement($this->testUri, 'rdf:type', new LODResource('http://purl.org/dc/dcmitype/StillImage')),
-            new LODStatement($this->testUri, 'rdf:type', new LODResource('http://purl.org/ontology/po/TVContent'))
+            new LODStatement($this->testUri, 'rdf:type', new LODResource('http://purl.org/ontology/po/TVContent')),
+            new LODStatement($this->testUri, 'schema:name', new LODLiteral('Y. Chettner', array('lang' => 'en-gb'))),
+            new LODStatement($this->testUri, 'rdfs:label', new LODLiteral('Yoinch Chettner', array('lang' => 'en-gb'))),
+            new LODStatement($this->testUri, 'dcterms:title', new LODLiteral('Monsieur Chettner', array('lang' => 'fr-fr'))),
         );
     }
 
@@ -29,7 +31,7 @@ final class LODInstanceTest extends TestCase
     {
         $instance = new LODInstance(new LOD(), $this->testUri);
         $instance->merge($this->testTriples);
-        $this->assertEquals(6, count($instance->model));
+        $this->assertEquals(8, count($instance->model));
     }
 
     function testFilter()
@@ -56,9 +58,11 @@ final class LODInstanceTest extends TestCase
             'http://foo.bar/page1',
             'http://foo.bar/page2',
             'http://foo.bar/page3',
-            'Yoinch Chettner',
             'http://purl.org/dc/dcmitype/StillImage',
-            'http://purl.org/ontology/po/TVContent'
+            'http://purl.org/ontology/po/TVContent',
+            'Y. Chettner',
+            'Yoinch Chettner',
+            'Monsieur Chettner'
         );
 
         $actualValues = array();
@@ -108,6 +112,20 @@ final class LODInstanceTest extends TestCase
         // matching on short form
         $this->assertEquals(TRUE, $instance->hasType('dcmitype:StillImage'));
         $this->assertEquals(TRUE, $instance->hasType('http://foo.bar/thing', 'http://smoo.bar/foo', 'po:TVContent'));
+    }
+
+    // if multiple matching predicates are in the RDF, the statement
+    // which matches the preferred language should be returned
+    function testLanguagePreference()
+    {
+        $lod = new LOD();
+        $lod->languages = array('fr-fr', 'en-gb');
+
+        $instance = new LODInstance($lod, $this->testUri, $this->testTriples);
+
+        $object = $instance['rdfs:label,schema:name,dcterms:title'];
+
+        $this->assertEquals('Monsieur Chettner', "$object");
     }
 }
 ?>

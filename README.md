@@ -44,6 +44,16 @@ php tools/phpunit.phar --bootstrap vendor/autoload.php tests/integration
 
 **Note that the integration tests work against the live [Acropolis stack](http://acropolis.org.uk/) and other LOD sites, so you will need a network connection to run them. They can also be somewhat fragile, as the number of statements for Acropolis resources may periodically change, depending on what's being ingested.**
 
+## Code coverage
+
+To generate a code coverage report for the tests, you will need to [install XDebug](https://xdebug.org/docs/install). Then, run:
+
+```
+php tools/phpunit.phar --bootstrap vendor/autoload.php --coverage-html coverage --whitelist src tests/integration
+```
+
+The report can be viewed by opening `coverage/index.html` in a web browser.
+
 ## Authors
 
 API design by [Mo McRoberts](https://github.com/nevali).

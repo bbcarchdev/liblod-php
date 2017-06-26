@@ -26,7 +26,10 @@ class LODLiteral extends LODTerm
     public $datatype = NULL;
     public $language = NULL;
 
-    public function __construct($value, $spec)
+    // $spec may contain a 'lang' or 'datatype' key;
+    // 'datatype' should be an expanded (not prefixed) URI for the datatype
+    // of the literal
+    public function __construct($value, $spec=array())
     {
         parent::__construct($value);
 

@@ -41,17 +41,17 @@ class LODStatement
             $prefixes = Rdf::COMMON_PREFIXES;
         }
 
-        if(!is_a($subj, 'res\liblod\LODResource'))
+        if(!($subj instanceof LODResource))
         {
             $subj = new LODResource(Rdf::expandPrefix($subj, $prefixes));
         }
 
-        if(!is_a($pred, 'res\liblod\LODResource'))
+        if(!($pred instanceof LODResource))
         {
             $pred = new LODResource(Rdf::expandPrefix($pred, $prefixes));
         }
 
-        if(is_a($objOrSpec, 'res\liblod\LODTerm'))
+        if($objOrSpec instanceof LODTerm)
         {
             $obj = $objOrSpec;
         }
@@ -61,6 +61,10 @@ class LODStatement
         }
         else
         {
+            if(isset($objOrSpec['datatype']))
+            {
+                $objOrSpec['datatype'] = Rdf::expandPrefix($objOrSpec['datatype'], $prefixes);
+            }
             $obj = new LODLiteral($objOrSpec['value'], $objOrSpec);
         }
 

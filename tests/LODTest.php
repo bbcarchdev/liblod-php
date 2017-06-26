@@ -91,13 +91,13 @@ final class LODTest extends TestCase
         $itemUri = "{$lod[$slotUri]['olo:item']}";
 
         // resolve the slot URI without a fetch - this gets some minimal data
-        $this->assertEquals(4, count($lod[$itemUri]->model),
-                            'should be 4 triples for ' . $itemUri);
+        $this->assertEquals(5, count($lod[$itemUri]->model),
+                            'should be 5 triples for ' . $itemUri);
 
         // fetch additional data about the URI and check it's added to the model
         $lod->fetch($itemUri);
-        $this->assertEquals(17, count($lod[$itemUri]->model),
-                            'should be 17 triples for ' . $itemUri .
+        $this->assertEquals(10, count($lod[$itemUri]->model),
+                            'should be 10 triples for ' . $itemUri .
                             ' after merge');
     }
 

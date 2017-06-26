@@ -154,7 +154,8 @@ class HttpClient
     }
 
     // $requestSpecs: array of arrays in format
-    // {'uri' => uri to fetch, 'originalUri' => original URI which led to this fetching this one}
+    // {'uri' => uri to fetch, 'originalUri' => original URI which led to
+    // fetching this one}
     // or array of URIs (which get converted to this format)
     // 'originalUri' is used when fetching the alternate RDF representation of
     // an HTML page

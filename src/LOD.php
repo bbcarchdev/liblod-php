@@ -301,14 +301,4 @@ class LOD implements ArrayAccess
     {
         trigger_error("LOD array members are read-only", E_USER_NOTICE);
     }
-
-    /**
-     * Create a LOD statement, using the prefixes currently set on this
-     * context.
-     * See the LODStatement (rdf.php) constructor for details of the arguments.
-     */
-    public function createStatement($subject, $predicate, $object)
-    {
-        return new LODStatement($subject, $predicate, $object, $this->prefixes);
-    }
 }

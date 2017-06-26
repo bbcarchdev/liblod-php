@@ -36,6 +36,16 @@ const TURTLE = <<<TURTLE
   foo:appelation "Boo" .
 TURTLE;
 
+const TURTLE_SAMEAS = <<<TURTLE_SAMEAS
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<http://foo.bar/somethingelse>
+  owl:sameAs <http://foo.bar/something> .
+
+<http://foo.bar/somethingelseagain>
+  owl:sameAs <http://foo.bar/something> .
+TURTLE_SAMEAS;
+
 final class FakeHttpClient
 {
     private $responseMap;
@@ -73,6 +83,18 @@ final class FakeHttpClient
             trigger_error("no fake response available for $uri");
         }
     }
+
+    public function getAll($uris)
+    {
+        $responses = array();
+
+        foreach($uris as $uri)
+        {
+            $responses[] = $this->get($uri);
+        }
+
+        return $responses;
+    }
 }
 
 final class LODTest extends TestCase
@@ -90,6 +112,36 @@ final class LODTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    function testFetchAll()
+    {
+        $fakeResponse1 = new LODResponse();
+        $fakeResponse1->payload = TURTLE;
+        $fakeResponse1->type = 'text/turtle';
+
+        $fakeResponse2 = new LODResponse();
+        $fakeResponse2->payload = TURTLE_SAMEAS;
+        $fakeResponse2->type = 'text/turtle';
+
+        $fakeClient = new FakeHttpClient(
+            array(
+                'http://foo.bar/something' => $fakeResponse1,
+                'http://foo.bar/somethingelse' => $fakeResponse2
+            )
+        );
+
+        $lod = new LOD($fakeClient);
+        $lod->fetchAll(
+            array('http://foo.bar/something', 'http://foo.bar/somethingelse')
+        );
+
+        // check each response has been processed
+        $lodinstance1 = $lod->locate('http://foo.bar/something');
+        $this->assertEquals(4, count($lodinstance1->model));
+
+        $lodinstance2 = $lod->locate('http://foo.bar/somethingelse');
+        $this->assertEquals(1, count($lodinstance2->model));
+    }
+
     function testResolve()
     {
         $fakeResponse = new LODResponse();
@@ -102,6 +154,21 @@ final class LODTest extends TestCase
         $lodinstance = $lod->resolve('http://foo.bar/something');
 
         $this->assertEquals(4, count($lodinstance->model));
+    }
+
+    function testSameAs()
+    {
+        $lod = new LOD();
+        $lod->loadRdf(TURTLE_SAMEAS, 'text/turtle');
+
+        $expected = array(
+            'http://foo.bar/somethingelse',
+            'http://foo.bar/somethingelseagain'
+        );
+
+        $actual = $lod->getSameAs('http://foo.bar/something');
+
+        $this->assertEquals($expected, $actual);
     }
 
     function testLoadRdfTurtle()

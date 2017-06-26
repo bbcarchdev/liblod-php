@@ -33,11 +33,11 @@ class LOD implements ArrayAccess
     public $languages = array('en-gb', 'en');
 
     /* The most recently-fetched URI */
-    protected $subject;
+    protected $subject = NULL;
 
     /* The most recently-fetched document URL (content-location or $subject
        if content-location not set) */
-    protected $document;
+    protected $document = NULL;
 
     /* HTTP status from the most recent fetch */
     protected $status = 0;
@@ -226,10 +226,6 @@ class LOD implements ArrayAccess
                 return $this->errMsg;
             case 'index':
                 return $this->index;
-            case 'prefixes':
-                return $this->prefixes;
-            case 'languages':
-                return $this->languages;
         }
         return null;
     }

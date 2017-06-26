@@ -172,17 +172,10 @@ class LOD implements ArrayAccess
         {
             return FALSE;
         }
-        else
-        {
-            // save the subject and document URIs
-            $this->subject = $response->target;
-            $this->document = $response->contentLocation;
 
-            if(empty($response))
-            {
-                return FALSE;
-            }
-        }
+        // save the subject and document URIs
+        $this->subject = $response->target;
+        $this->document = $response->contentLocation;
 
         // make a graph from the response
         $this->loadRdf($response->payload, $response->type);
@@ -233,10 +226,10 @@ class LOD implements ArrayAccess
                 return $this->errMsg;
             case 'index':
                 return $this->index;
-            case 'languages':
-                return $this->languages;
             case 'prefixes':
                 return $this->prefixes;
+            case 'languages':
+                return $this->languages;
         }
         return null;
     }

@@ -42,6 +42,7 @@ final class LODInstanceTest extends TestCase
             new LODStatement($this->testUri, 'schema:name', new LODLiteral('Y. Chettner', array('lang' => 'en-gb'))),
             new LODStatement($this->testUri, 'rdfs:label', new LODLiteral('Yoinch Chettner', array('lang' => 'en-gb'))),
             new LODStatement($this->testUri, 'dcterms:title', new LODLiteral('Monsieur Chettner', array('lang' => 'fr-fr'))),
+            new LODStatement($this->testUri, 'dcterms:title', new LODLiteral('Herr Chettner', array('lang' => 'de-de')))
         );
     }
 
@@ -49,7 +50,7 @@ final class LODInstanceTest extends TestCase
     {
         $instance = new LODInstance(new LOD(), $this->testUri);
         $instance->merge($this->testTriples);
-        $this->assertEquals(8, count($instance->model));
+        $this->assertEquals(9, count($instance->model));
     }
 
     function testFilter()
@@ -72,6 +73,8 @@ final class LODInstanceTest extends TestCase
     {
         $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
 
+        $this->assertEquals(0, $instance->key());
+
         $expectedValues = array(
             'http://foo.bar/page1',
             'http://foo.bar/page2',
@@ -80,7 +83,8 @@ final class LODInstanceTest extends TestCase
             'http://purl.org/ontology/po/TVContent',
             'Y. Chettner',
             'Yoinch Chettner',
-            'Monsieur Chettner'
+            'Monsieur Chettner',
+            'Herr Chettner'
         );
 
         $actualValues = array();
@@ -133,7 +137,7 @@ final class LODInstanceTest extends TestCase
     }
 
     // if multiple matching predicates are in the RDF, the statement
-    // which matches the preferred language should be returned
+    // which matches the first preferred language should be returned
     function testLanguagePreference()
     {
         $lod = new LOD();
@@ -142,8 +146,74 @@ final class LODInstanceTest extends TestCase
         $instance = new LODInstance($lod, $this->testUri, $this->testTriples);
 
         $object = $instance['rdfs:label,schema:name,dcterms:title'];
-
         $this->assertEquals('Monsieur Chettner', "$object");
+    }
+
+    // if languages is set to 'de-de', we should only get literals
+    // which match that language, even if there are multiple statements
+    // matching the predicate we specify
+    function testFilterWithLanguages()
+    {
+        $lod = new LOD();
+        $lod->languages = array('de-de');
+
+        $instance = new LODInstance($lod, $this->testUri, $this->testTriples);
+
+        $object = $instance->filter('dcterms:title');
+        $this->assertEquals('Herr Chettner', "$object");
+    }
+
+    function testGetUri()
+    {
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
+        $this->assertEquals($this->testUri, $instance->__get('uri'));
+    }
+
+    function testToString()
+    {
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
+        $this->assertEquals($this->testUri, $instance->__toString());
+
+        // an instance created via a filter which returns no statements
+        // has '' as its string representation
+        $filtered = $instance['boogle:woogle'];
+        $this->assertEquals('', $filtered->__toString());
+    }
+
+    function testPropertySettersAndGetters()
+    {
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
+
+        // getting a non-existent property returns NULL
+        $this->assertEquals(NULL, $instance->boo);
+
+        // arbitrary properties can be set/unset
+        $instance->foo = 'bar';
+        $this->assertEquals('bar', $instance->foo);
+
+        unset($instance->foo);
+        $this->assertEquals(FALSE, isset($instance->foo));
+    }
+
+    function testSetModel()
+    {
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $instance->model = array();
+    }
+
+    function testSetUri()
+    {
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $instance->uri = 'http://boo.bar/';
+    }
+
+    function testSetExists()
+    {
+        $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $instance->exists = TRUE;
     }
 }
 ?>

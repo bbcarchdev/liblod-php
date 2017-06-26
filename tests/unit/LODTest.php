@@ -20,6 +20,7 @@
 /* Unit tests for LOD */
 use res\liblod\LOD;
 use res\liblod\LODResponse;
+use res\liblod\Rdf;
 
 use PHPUnit\Framework\TestCase;
 
@@ -179,6 +180,124 @@ final class LODTest extends TestCase
         $actual = $lod->getSameAs('http://foo.bar/something');
 
         $this->assertEquals($expected, $actual);
+    }
+
+    function testOffsetSetThrowsException()
+    {
+        $lod = new LOD();
+        $this->expectException(PHPUnit_Framework_Error_Notice::class);
+        $lod->offsetSet(0, 'bar');
+    }
+
+    function testOffsetUnsetThrowsException()
+    {
+        $lod = new LOD();
+        $this->expectException(PHPUnit_Framework_Error_Notice::class);
+        $lod->offsetUnset(0);
+    }
+
+    function testOffsetExists()
+    {
+        $lod = new LOD();
+        $lod->loadRdf(TURTLE, 'text/turtle');
+
+        $expected = TRUE;
+        $actual = $lod->offsetExists('http://foo.bar/something');
+        $this->assertEquals($expected, $actual);
+
+        $expected = FALSE;
+        $actual = $lod->offsetExists(99);
+        $this->assertEquals($expected, $actual);
+    }
+
+    function testIsset()
+    {
+        $lod = new LOD();
+        $lod->loadRdf(TURTLE, 'text/turtle');
+        $this->assertEquals(TRUE, isset($lod['http://foo.bar/something']));
+    }
+
+    function testProperties()
+    {
+        $lod = new LOD();
+        $this->assertEquals(NULL, $lod->foo);
+
+        $this->assertEquals(array(), $lod->index);
+
+        $props = array('subject', 'document', 'errMsg');
+        foreach($props as $prop)
+        {
+            $this->assertEquals(NULL, $lod->{$prop});
+        }
+
+        $props = array('error', 'status');
+        foreach($props as $prop)
+        {
+            $this->assertEquals(0, $lod->{$prop});
+        }
+
+        // test non-existent property
+        $this->assertEquals(FALSE, isset($lod->foo));
+
+        // arbitrary properties can be set and unset
+        $lod->foo = 'bar';
+        $this->assertEquals('bar', $lod->foo);
+        unset($lod->foo);
+        $this->assertEquals(FALSE, isset($lod->foo));
+    }
+
+    function testSubject()
+    {
+        $lod = new LOD();
+        $this->assertEquals(FALSE, isset($lod->subject));
+
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $lod->subject = 'foo';
+    }
+
+    function testDocument()
+    {
+        $lod = new LOD();
+        $this->assertEquals(FALSE, isset($lod->document));
+
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $lod->document = 'foo';
+    }
+
+    function testStatus()
+    {
+        $lod = new LOD();
+        $this->assertEquals(FALSE, isset($lod->status));
+
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $lod->status = 200;
+    }
+
+    function testError()
+    {
+        $lod = new LOD();
+        $this->assertEquals(FALSE, isset($lod->error));
+
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $lod->error = 1;
+    }
+
+    function testErrMsg()
+    {
+        $lod = new LOD();
+        $this->assertEquals(FALSE, isset($lod->errMsg));
+
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $lod->errMsg = 1;
+    }
+
+    function testIndex()
+    {
+        $lod = new LOD();
+        $this->assertEquals(TRUE, isset($lod->index));
+
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $lod->index = array();
     }
 
     function testLoadRdfTurtle()

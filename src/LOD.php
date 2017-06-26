@@ -33,20 +33,20 @@ class LOD implements ArrayAccess
     public $languages = array('en-gb', 'en');
 
     /* The most recently-fetched URI */
-    protected $subject = NULL;
+    protected $subject;
 
     /* The most recently-fetched document URL (content-location or $subject
        if content-location not set) */
-    protected $document = NULL;
+    protected $document;
 
     /* HTTP status from the most recent fetch */
-    protected $status = 0;
+    protected $status;
 
     /* The error code from the most recent fetch */
-    protected $error = 0;
+    protected $error;
 
     /* The error message from the most recent fetch */
-    protected $errMsg = NULL;
+    protected $errMsg;
 
     /* The RDF "index" (map from subject URIs to LODInstance objects) */
     protected $index = array();
@@ -246,6 +246,9 @@ class LOD implements ArrayAccess
         $this->{$name} = $value;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function __unset($name)
     {
         switch($name)
@@ -262,6 +265,9 @@ class LOD implements ArrayAccess
         unset($this->{$name});
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function __isset($name)
     {
         switch($name)
@@ -289,11 +295,17 @@ class LOD implements ArrayAccess
         return (is_object($inst) && $inst->exists);
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function offsetSet($name, $value)
     {
         trigger_error("LOD array members are read-only", E_USER_NOTICE);
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function offsetUnset($name)
     {
         trigger_error("LOD array members are read-only", E_USER_NOTICE);

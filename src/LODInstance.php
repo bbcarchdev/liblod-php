@@ -94,6 +94,7 @@ class LODInstance implements ArrayAccess, Iterator
             case 'exists':
                 return $this->exists();
         }
+        return NULL;
     }
 
     public function __set($name, $value)

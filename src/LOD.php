@@ -60,10 +60,20 @@ class LOD implements ArrayAccess
     /* RDF prefixes */
     public $prefixes = Rdf::COMMON_PREFIXES;
 
-    public function __construct()
+    public function __construct($httpClient=NULL, $parser=NULL)
     {
-        $this->httpClient = new HttpClient();
-        $this->parser = new Parser();
+        if(empty($httpClient))
+        {
+            $httpClient = new HttpClient();
+        }
+
+        if(empty($parser))
+        {
+            $parser = new Parser();
+        }
+
+        $this->httpClient = $httpClient;
+        $this->parser = $parser;
     }
 
     /* Set an RDF prefix, which can be used in accessor strings on

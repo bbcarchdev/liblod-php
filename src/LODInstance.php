@@ -207,7 +207,7 @@ class LODInstance implements ArrayAccess, Iterator
             // if the object has no 'lang' key, we can't compare languages,
             // so we just assume the language is OK
             $langOK = TRUE;
-            if(is_a($item->object, 'LODLiteral') && ($item->object->language !== NULL))
+            if(($item->object instanceof LODLiteral) && ($item->object->language !== NULL))
             {
                 $langOK = in_array($item->object->language, $languages);
             }

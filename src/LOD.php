@@ -227,7 +227,7 @@ class LOD implements ArrayAccess
             case 'index':
                 return $this->index;
         }
-        return null;
+        return NULL;
     }
 
     public function __set($name, $value)

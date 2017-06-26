@@ -93,8 +93,6 @@ class LODInstance implements ArrayAccess, Iterator
                 return $this->model;
             case 'exists':
                 return $this->exists();
-            case 'primaryTopic':
-                return $this->primaryTopic();
         }
     }
 
@@ -105,7 +103,6 @@ class LODInstance implements ArrayAccess, Iterator
             case 'uri':
             case 'model':
             case 'exists':
-            case 'primaryTopic':
                 trigger_warning("The LODInstance::$name property is read-only", E_USER_WARNING);
                 return;
         }
@@ -166,13 +163,6 @@ class LODInstance implements ArrayAccess, Iterator
         }
 
         return FALSE;
-    }
-
-    /* Return the URI of the foaf:primaryTopic for the given $uri, or
-       NULL if $uri isn't in the LOD */
-    public function primaryTopic($uri)
-    {
-        return "{$this['foaf:primaryTopic']}";
     }
 
     /**

@@ -1,4 +1,4 @@
 composer.lock
-coverage
+cov
 vendor
 **/.DS_Store

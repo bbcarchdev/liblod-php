@@ -30,13 +30,19 @@ php tools/composer.phar install
 
 ## Running the tests
 
-**Note that the tests work against the live [Acropolis stack](http://acropolis.org.uk/) and other LOD sites, so you will need a network connection to run them.**
-
-To run the tests:
+To run the unit tests:
 
 ```
-php tools/phpunit.phar --bootstrap vendor/autoload.php tests/
+php tools/phpunit.phar --bootstrap vendor/autoload.php tests/unit
 ```
+
+To run the integration tests:
+
+```
+php tools/phpunit.phar --bootstrap vendor/autoload.php tests/integration
+```
+
+**Note that the integration tests work against the live [Acropolis stack](http://acropolis.org.uk/) and other LOD sites, so you will need a network connection to run them. They can also be somewhat fragile, as the number of statements for Acropolis resources may periodically change, depending on what's being ingested.**
 
 ## Authors
 

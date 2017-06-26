@@ -17,30 +17,12 @@
  * limitations under the License.
  */
 
-/* Integration tests for LOD
- *
- * Because we're using curl handles, we just test against the live
- * Acropolis, because we can't stub out the HTTP client for unit testing.
- *
- * Also note we can't force curl to throw a really bad error to test
- * LOD->error and LOD->errMsg.
- */
+/* Integration tests for LOD */
 use res\liblod\LOD;
 
 use PHPUnit\Framework\TestCase;
 
-const TURTLE = <<<TURTLE
-@prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix schema: <http://schema.org/> .
-
-<http://foo.bar/something>
-  dcterms:title "Bar" ;
-  rdfs:label "Foo" ;
-  schema:name "Baz" .
-TURTLE;
-
-final class LODTest extends TestCase
+final class LODIntegrationTest extends TestCase
 {
     function testGetSameAs()
     {
@@ -243,14 +225,6 @@ final class LODTest extends TestCase
         $lod = new LOD();
         $instance = $lod->resolve('http://dbpedia.org/resource/Oxford');
         $this->assertEquals(190, count($instance->model));
-    }
-
-    function testLoadRdfTurtle()
-    {
-        $lod = new LOD();
-        $lod->loadRdf(TURTLE, 'text/turtle');
-        $lodinstance = $lod->resolve('http://foo.bar/something');
-        $this->assertEquals(3, count($lodinstance->model));
     }
 }
 ?>

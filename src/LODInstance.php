@@ -104,8 +104,7 @@ class LODInstance implements ArrayAccess, Iterator
             case 'uri':
             case 'model':
             case 'exists':
-                trigger_warning("The LODInstance::$name property is read-only", E_USER_WARNING);
-                return;
+                trigger_error("The LODInstance::$name property is read-only", E_USER_WARNING);
         }
         $this->{$name} = $value;
     }

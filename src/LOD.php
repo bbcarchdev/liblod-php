@@ -240,9 +240,8 @@ class LOD implements ArrayAccess
             case 'error':
             case 'errMsg':
             case 'index':
-                trigger_warning("The LOD::$name property is read-only",
-                                E_USER_WARNING);
-                return;
+                trigger_error("The LOD::$name property is read-only",
+                              E_USER_WARNING);
         }
         $this->{$name} = $value;
     }
@@ -257,9 +256,8 @@ class LOD implements ArrayAccess
             case 'error':
             case 'errMsg':
             case 'index':
-                trigger_warning("The LOD::$name property is read-only",
-                                E_USER_WARNING);
-                return;
+                trigger_error("The LOD::$name property is read-only",
+                              E_USER_WARNING);
         }
         unset($this->{$name});
     }

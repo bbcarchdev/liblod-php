@@ -142,6 +142,16 @@ final class LODTest extends TestCase
         $this->assertEquals(1, count($lodinstance2->model));
     }
 
+    function testProcessBadResponse()
+    {
+        $lod = new LOD();
+
+        $badResponse = new LODResponse();
+        $badResponse->error = 1;
+        $this->assertEquals(FALSE, $lod->process($badResponse),
+                            'processing error response should return FALSE');
+    }
+
     function testResolve()
     {
         $fakeResponse = new LODResponse();

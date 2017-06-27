@@ -45,9 +45,14 @@ class HttpClient
     /* Maximum number of redirects to follow */
     public $maxRedirects = 10;
 
-    public function __construct()
+    public function __construct($client=NULL)
     {
-        $this->client = new GuzzleClient();
+        if(empty($client))
+        {
+            $client = new GuzzleClient();
+        }
+
+        $this->client = $client;
     }
 
     // returns TRUE if $typeValue matches one of the values in self::RDF_TYPES
@@ -61,6 +66,17 @@ class HttpClient
             }
         }
         return FALSE;
+    }
+
+    // make a LODResponse to encapsulate an error
+    private function makeErrorResponse($uri, $errorCode, $errMsg, $status=0)
+    {
+        $lodresponse = new LODResponse();
+        $lodresponse->status = $status;
+        $lodresponse->target = $uri;
+        $lodresponse->error = $errorCode;
+        $lodresponse->errMsg = $errMsg;
+        return $lodresponse;
     }
 
     /**
@@ -103,27 +119,13 @@ class HttpClient
             $location = UriResolver::resolve($base, $rel);
         }
 
-        return "$location";
+        return ($location === NULL ? NULL : "$location");
     }
 
     // convert Guzzle response $rawResponse to LODResponse
     private function convertResponse($uri, $rawResponse)
     {
-        // this should be set in conditional below
-        $response = NULL;
-
         $status = $rawResponse->getStatusCode();
-
-        // bad response
-        if($status >= 500)
-        {
-            $response = new LODResponse();
-            $response->target = $uri;
-            $response->error = 1;
-            $response->status = $status;
-            $response->errMsg = $rawResponse->getReasonPhrase();
-            return $response;
-        }
 
         // intelligible response, convert it
         $response = new LODResponse();
@@ -136,17 +138,6 @@ class HttpClient
         $response->contentLocation = ($contentLocation ? $contentLocation[0] : $uri);
 
         return $response;
-    }
-
-    // perform an HTTP GET and return a LODResponse
-    // $uri: URI to fetch
-    public function get($uri)
-    {
-        $lodresponses = $this->getAll(array(
-            array('uri' => $uri, 'originalUri' => $uri)
-        ));
-
-        return $lodresponses[0];
     }
 
     // convert array of URIs to the format required by getAll()
@@ -162,10 +153,9 @@ class HttpClient
         return array_map(function ($requestSpecOrUri) {
             if(is_string($requestSpecOrUri))
             {
-                $uri = "$requestSpecOrUri";
                 $requestSpecOrUri = array(
-                    'uri' => $uri,
-                    'originalUri' => $uri
+                    'uri' => $requestSpecOrUri,
+                    'originalUri' => $requestSpecOrUri
                 );
             }
             else if(empty($requestSpecOrUri['originalUri']))
@@ -177,14 +167,15 @@ class HttpClient
         }, $requestSpecsOrUris);
     }
 
-    // make a LODResponse to encapsulate an error
-    private function makeErrorResponse($uri, $errorCode, $errMsg)
+    // perform an HTTP GET and return a LODResponse
+    // $uri: URI to fetch
+    public function get($uri)
     {
-        $lodresponse = new LODResponse();
-        $lodresponse->target = $uri;
-        $lodresponse->error = $errorCode;
-        $lodresponse->errMsg = $errMsg;
-        return $lodresponse;
+        $lodresponses = $this->getAll(array(
+            array('uri' => $uri, 'originalUri' => $uri)
+        ));
+
+        return $lodresponses[0];
     }
 
     // see normaliseToRequestSpecs() for the format required for
@@ -217,15 +208,19 @@ class HttpClient
         {
             $uri = $requestSpecs[$index]['uri'];
             $originalUri = $requestSpecs[$index]['originalUri'];
-
             $contentType = $response->getHeader('Content-Type');
-            if($contentType)
+
+            // if the content type isn't available, we won't be able to do
+            // anything with the response, so add an error and return
+            if(count($contentType) < 1)
             {
-                $contentType = $contentType[0];
+                $lodresponses[$index] =
+                    $this->makeErrorResponse($uri, 1, 'no content type');
+                return;
             }
 
             $isHtml = ($response->getStatusCode() === 200 &&
-                       preg_match('|text/html|', $contentType));
+                       preg_match('|text/html|', $contentType[0]));
 
             if($isHtml)
             {
@@ -256,6 +251,7 @@ class HttpClient
             $lodresponses[$index] = $lodresponse;
         };
 
+        // status code 500 gets captured here
         $rejectedFn = function($reason, $index) use(&$lodresponses, $requestSpecs)
         {
             $uri = $requestSpecs[$index]['uri'];
@@ -276,10 +272,8 @@ class HttpClient
         // fetch the RDF variants of HTML pages
         if(count($needsFetch) > 0)
         {
-            $lodresponses = array_merge(
-                $lodresponses,
-                $this->getAll($needsFetch)
-            );
+            $rdfVariants = $this->getAll($needsFetch);
+            $lodresponses = array_merge($lodresponses, $rdfVariants);
         }
 
         return $lodresponses;

@@ -24,7 +24,7 @@ use res\liblod\Rdf;
 
 use PHPUnit\Framework\TestCase;
 
-const TURTLE = <<<TURTLE
+const LOD_TURTLE = <<<TURTLE
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix schema: <http://schema.org/> .
@@ -37,7 +37,7 @@ const TURTLE = <<<TURTLE
   foo:appelation "Boo" .
 TURTLE;
 
-const TURTLE_SAMEAS = <<<TURTLE_SAMEAS
+const LOD_TURTLE_SAMEAS = <<<TURTLE_SAMEAS
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
 <http://foo.bar/somethingelse>
@@ -105,7 +105,7 @@ final class LODTest extends TestCase
         $lod = new LOD();
         $lod->setPrefix('bar', 'http://foo.bar/');
 
-        $lod->loadRdf(TURTLE, 'text/turtle');
+        $lod->loadRdf(LOD_TURTLE, 'text/turtle');
         $lodinstance = $lod['http://foo.bar/something'];
 
         $expected = 'Boo';
@@ -116,11 +116,11 @@ final class LODTest extends TestCase
     function testFetchAll()
     {
         $fakeResponse1 = new LODResponse();
-        $fakeResponse1->payload = TURTLE;
+        $fakeResponse1->payload = LOD_TURTLE;
         $fakeResponse1->type = 'text/turtle';
 
         $fakeResponse2 = new LODResponse();
-        $fakeResponse2->payload = TURTLE_SAMEAS;
+        $fakeResponse2->payload = LOD_TURTLE_SAMEAS;
         $fakeResponse2->type = 'text/turtle';
 
         $fakeClient = new FakeHttpClient(
@@ -162,7 +162,7 @@ final class LODTest extends TestCase
     function testResolve()
     {
         $fakeResponse = new LODResponse();
-        $fakeResponse->payload = TURTLE;
+        $fakeResponse->payload = LOD_TURTLE;
         $fakeResponse->type = 'text/turtle';
 
         $fakeClient = new FakeHttpClient($fakeResponse);
@@ -176,7 +176,7 @@ final class LODTest extends TestCase
     function testSameAs()
     {
         $lod = new LOD();
-        $lod->loadRdf(TURTLE_SAMEAS, 'text/turtle');
+        $lod->loadRdf(LOD_TURTLE_SAMEAS, 'text/turtle');
 
         $expected = array(
             'http://foo.bar/somethingelse',
@@ -205,7 +205,7 @@ final class LODTest extends TestCase
     function testOffsetExists()
     {
         $lod = new LOD();
-        $lod->loadRdf(TURTLE, 'text/turtle');
+        $lod->loadRdf(LOD_TURTLE, 'text/turtle');
 
         $expected = TRUE;
         $actual = $lod->offsetExists('http://foo.bar/something');
@@ -219,7 +219,7 @@ final class LODTest extends TestCase
     function testIsset()
     {
         $lod = new LOD();
-        $lod->loadRdf(TURTLE, 'text/turtle');
+        $lod->loadRdf(LOD_TURTLE, 'text/turtle');
         $this->assertEquals(TRUE, isset($lod['http://foo.bar/something']));
     }
 
@@ -309,7 +309,7 @@ final class LODTest extends TestCase
     function testLoadRdfTurtle()
     {
         $lod = new LOD();
-        $lod->loadRdf(TURTLE, 'text/turtle');
+        $lod->loadRdf(LOD_TURTLE, 'text/turtle');
         $lodinstance = $lod->resolve('http://foo.bar/something');
         $this->assertEquals(4, count($lodinstance->model));
     }

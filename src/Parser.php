@@ -43,7 +43,9 @@ class Parser
     // $type is the mime type of the response being parsed; one of
     // text/turtle, application/rdf+xml
     //
-    // returns EasyRdf_Graph
+    // if $type is not a recognised content type, throws an exception
+    //
+    // returns array of LODStatement objects
     public function parse($rdf, $type)
     {
         if(preg_match('|^text/turtle|', $type))
@@ -89,6 +91,6 @@ class Parser
         }
 
         // if we reach here, we haven't been able to parse the RDF
-        trigger_error('No parser for content type ' . $type);
+        throw new Exception('No parser for content type ' . $type);
     }
 }

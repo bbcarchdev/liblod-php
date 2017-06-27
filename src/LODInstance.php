@@ -26,6 +26,69 @@ use res\liblod\LODResponse;
 use \ArrayAccess;
 use \Iterator;
 
+// Iterator implementation
+trait LODInstanceIterator
+{
+    public function current()
+    {
+        // Return the full LODStatement at this position in the model
+        return $this->model[$this->position];
+    }
+
+    public function key()
+    {
+        return $this->position;
+    }
+
+    public function next()
+    {
+        ++$this->position;
+    }
+
+    public function rewind()
+    {
+        $this->position = 0;
+    }
+
+    public function valid()
+    {
+        return isset($this->model[$this->position]);
+    }
+}
+
+// ArrayAccess implementation
+trait LODInstanceArrayAccess
+{
+    // an offset is assumed to exist if the query returns a LODInstance
+    // with at least one matching LODStatement in its model
+    public function offsetExists($query)
+    {
+        $instance = $this->filter($query);
+        return count($instance->model) > 0;
+    }
+
+    public function offsetGet($query)
+    {
+        return $this->filter($query);
+    }
+
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetSet($offset, $value)
+    {
+        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
+    }
+
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetUnset($offset)
+    {
+        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
+    }
+}
+
 /**
  * Wrapper for an EasyRdf_Resource.
  *
@@ -53,6 +116,9 @@ use \Iterator;
  */
 class LODInstance implements ArrayAccess, Iterator
 {
+    use LODInstanceIterator;
+    use LODInstanceArrayAccess;
+
     /* The LOD context we come from */
     protected $context;
 
@@ -239,64 +305,6 @@ class LODInstance implements ArrayAccess, Iterator
 
         // create a new FilteredLODInstance with the filtered triples
         return new FilteredLODInstance($this->context, $this->uri, $filtered);
-    }
-
-    // ArrayAccess implementation
-
-    // an offset is assumed to exist if the query returns a LODInstance
-    // with at least one matching LODStatement in its model
-    public function offsetExists($query)
-    {
-        $instance = $this->filter($query);
-        return count($instance->model) > 0;
-    }
-
-    public function offsetGet($query)
-    {
-        return $this->filter($query);
-    }
-
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function offsetSet($offset, $value)
-    {
-        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
-    }
-
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function offsetUnset($offset)
-    {
-        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
-    }
-
-    // Iterator implementation
-    public function current()
-    {
-        // Return the full LODStatement at this position in the model
-        return $this->model[$this->position];
-    }
-
-    public function key()
-    {
-        return $this->position;
-    }
-
-    public function next()
-    {
-        ++$this->position;
-    }
-
-    public function rewind()
-    {
-        $this->position = 0;
-    }
-
-    public function valid()
-    {
-        return isset($this->model[$this->position]);
     }
 
     /* Return the subject URI as the string representation */

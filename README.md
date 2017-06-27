@@ -11,7 +11,7 @@ commands below in full.
 
 ## Requirements
 
-PHP 5+ (works under PHP 7, but no features from PHP 7 are used).
+PHP 5.4 or higher (it works under PHP 7, but no features from PHP 7 are used).
 
 ## Installation
 

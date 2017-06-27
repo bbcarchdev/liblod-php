@@ -49,13 +49,6 @@ final class LODInstanceTest extends TestCase
         );
     }
 
-    function testMerge()
-    {
-        $instance = new LODInstance(new LOD(), $this->testUri);
-        $instance->merge($this->testTriples);
-        $this->assertEquals(9, count($instance->model));
-    }
-
     function testFilter()
     {
         $instance = new LODInstance(new LOD(), $this->testUri, $this->testTriples);

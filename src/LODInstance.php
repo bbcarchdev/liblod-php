@@ -112,18 +112,6 @@ class LODInstance implements ArrayAccess, Iterator
     }
 
     /**
-     * Merge another resource with this instance, providing the resource being
-     * merged has the same URI as this instance.
-     */
-    public function merge($statements)
-    {
-        foreach($statements as $statement)
-        {
-            $this->add($statement);
-        }
-    }
-
-    /**
      * Add a LODStatement, but only if the same subject+predicate+object isn't
      * already in the model.
      */

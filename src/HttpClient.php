@@ -63,7 +63,12 @@ class HttpClient
         return FALSE;
     }
 
-    // $uri is used to make the <link rel="alternate"> href absolute
+    /**
+     * $uri is used to make the <link rel="alternate"> href absolute
+     *
+     * for UriResolver::resolve()
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     */
     private function getRdfLink($html, $uri)
     {
         $location = NULL;
@@ -117,27 +122,18 @@ class HttpClient
             $response->error = 1;
             $response->status = $status;
             $response->errMsg = $rawResponse->getReasonPhrase();
+            return $response;
         }
-        // intelligible response, convert it
-        else
-        {
-            $response = new LODResponse();
-            $response->target = $uri;
-            $response->payload = $rawResponse->getBody()->getContents();
-            $response->status = $status;
-            $response->type = $rawResponse->getHeader('Content-Type')[0];
 
-            $contentLocation = $rawResponse->getHeader('Content-Location');
-            if($contentLocation)
-            {
-                $contentLocation = $contentLocation[0];
-            }
-            else
-            {
-                $contentLocation = $uri;
-            }
-            $response->contentLocation = $contentLocation;
-        }
+        // intelligible response, convert it
+        $response = new LODResponse();
+        $response->target = $uri;
+        $response->payload = $rawResponse->getBody()->getContents();
+        $response->status = $status;
+        $response->type = $rawResponse->getHeader('Content-Type')[0];
+
+        $contentLocation = $rawResponse->getHeader('Content-Location');
+        $response->contentLocation = ($contentLocation ? $contentLocation[0] : $uri);
 
         return $response;
     }

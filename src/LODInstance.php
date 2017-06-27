@@ -200,7 +200,7 @@ class LODInstance implements ArrayAccess, Iterator
         $languages = $this->context->languages;
 
         // get triples which match the query
-        $fn = function($item) use($predicates, $languages)
+        $filterFn = function($item) use($predicates, $languages)
         {
             $predicateMatches = in_array($item->predicate->value, $predicates);
 
@@ -215,7 +215,7 @@ class LODInstance implements ArrayAccess, Iterator
             return $predicateMatches && $langOK;
         };
 
-        $filtered = array_filter($this->model, $fn);
+        $filtered = array_filter($this->model, $filterFn);
 
         // sort the results depending on the language of the object literals
         // so statements in our most-preferred language are first
@@ -269,12 +269,18 @@ class LODInstance implements ArrayAccess, Iterator
         return $this->filter($query);
     }
 
-    public function offsetSet($query, $value)
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetSet($offset, $value)
     {
         trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
     }
 
-    public function offsetUnset($query)
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetUnset($offset)
     {
         trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
     }
@@ -325,10 +331,7 @@ class LODInstance implements ArrayAccess, Iterator
             {
                 return $this->model[0]->object->value;
             }
-            else
-            {
-                return '';
-            }
+            return '';
         }
         return $this->uri;
     }

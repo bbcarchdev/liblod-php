@@ -212,6 +212,10 @@ class Rdf
         );
     }
 
+    /**
+     * for EasyRdf_Namespace::set()
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     */
     public static function setNamespaces($prefixes=Rdf::COMMON_PREFIXES)
     {
         foreach($prefixes as $prefix => $fullUri)

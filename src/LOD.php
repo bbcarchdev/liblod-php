@@ -297,16 +297,18 @@ class LOD implements ArrayAccess
 
     /**
      * @codeCoverageIgnore
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function offsetSet($name, $value)
+    public function offsetSet($offset, $value)
     {
         trigger_error("LOD array members are read-only", E_USER_NOTICE);
     }
 
     /**
      * @codeCoverageIgnore
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function offsetUnset($name)
+    public function offsetUnset($offset)
     {
         trigger_error("LOD array members are read-only", E_USER_NOTICE);
     }

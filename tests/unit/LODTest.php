@@ -143,14 +143,20 @@ final class LODTest extends TestCase
         $this->assertEquals(1, count($lodinstance2->model));
     }
 
-    function testProcessBadResponse()
+    function testFetchBadResponse()
     {
-        $lod = new LOD();
+        $uri = 'http://foo.bar/something';
 
-        $badResponse = new LODResponse();
-        $badResponse->error = 1;
-        $this->assertEquals(FALSE, $lod->process($badResponse),
-                            'processing error response should return FALSE');
+        $fakeResponse = new LODResponse();
+        $fakeResponse->target = $uri;
+        $fakeResponse->error = 1;
+
+        $fakeClient = new FakeHttpClient($fakeResponse);
+
+        $lod = new LOD($fakeClient);
+
+        $this->assertEquals(FALSE, $lod->fetch($uri),
+                            'fetch with error response should return FALSE');
     }
 
     function testResolve()

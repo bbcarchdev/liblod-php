@@ -26,8 +26,43 @@ use res\liblod\Rdf;
 
 use \ArrayAccess;
 
+// ArrayAccess implementation
+trait LODArrayAccess
+{
+    public function offsetGet($name)
+    {
+        return $this->resolve($name);
+    }
+
+    public function offsetExists($name)
+    {
+        $inst = $this->offsetGet($name);
+        return (is_object($inst) && $inst->exists);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetSet($offset, $value)
+    {
+        trigger_error("LOD array members are read-only", E_USER_NOTICE);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetUnset($offset)
+    {
+        trigger_error("LOD array members are read-only", E_USER_NOTICE);
+    }
+}
+
 class LOD implements ArrayAccess
 {
+    use LODArrayAccess;
+
     /* Languages we prefer to get literals in (first in the list has highest
        priority) */
     public $languages = array('en-gb', 'en');
@@ -170,7 +205,7 @@ class LOD implements ArrayAccess
 
     /* Process a LODResponse into the model; return the LODInstance, or FALSE
        if the fetch failed */
-    public function process(LODResponse $response)
+    private function process(LODResponse $response)
     {
         $this->status = $response->status;
         $this->error = $response->error;
@@ -220,22 +255,8 @@ class LOD implements ArrayAccess
     /* Property accessors */
     public function __get($name)
     {
-        switch($name)
-        {
-            case 'subject':
-                return $this->subject;
-            case 'document':
-                return $this->document;
-            case 'status':
-                return $this->status;
-            case 'error':
-                return $this->error;
-            case 'errMsg':
-                return $this->errMsg;
-            case 'index':
-                return $this->index;
-        }
-        return NULL;
+        $hasProperty = property_exists(get_class($this), $name);
+        return ($hasProperty ? $this->{$name} : NULL);
     }
 
     public function __set($name, $value)
@@ -278,46 +299,6 @@ class LOD implements ArrayAccess
      */
     public function __isset($name)
     {
-        switch($name)
-        {
-            case 'subject':
-            case 'document':
-            case 'status':
-            case 'error':
-            case 'errMsg':
-            case 'index':
-                return isset($this->{$name});
-        }
-        return FALSE;
-    }
-
-    /* ArrayAccess methods */
-    public function offsetGet($name)
-    {
-        return $this->resolve($name);
-    }
-
-    public function offsetExists($name)
-    {
-        $inst = $this->offsetGet($name);
-        return (is_object($inst) && $inst->exists);
-    }
-
-    /**
-     * @codeCoverageIgnore
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function offsetSet($offset, $value)
-    {
-        trigger_error("LOD array members are read-only", E_USER_NOTICE);
-    }
-
-    /**
-     * @codeCoverageIgnore
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function offsetUnset($offset)
-    {
-        trigger_error("LOD array members are read-only", E_USER_NOTICE);
+        return isset($this->{$name});
     }
 }

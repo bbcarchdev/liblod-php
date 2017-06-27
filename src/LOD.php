@@ -26,39 +26,6 @@ use res\liblod\Rdf;
 
 use \ArrayAccess;
 
-// ArrayAccess implementation
-trait LODArrayAccess
-{
-    public function offsetGet($name)
-    {
-        return $this->resolve($name);
-    }
-
-    public function offsetExists($name)
-    {
-        $inst = $this->offsetGet($name);
-        return (is_object($inst) && $inst->exists);
-    }
-
-    /**
-     * @codeCoverageIgnore
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function offsetSet($offset, $value)
-    {
-        trigger_error("LOD array members are read-only", E_USER_NOTICE);
-    }
-
-    /**
-     * @codeCoverageIgnore
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function offsetUnset($offset)
-    {
-        trigger_error("LOD array members are read-only", E_USER_NOTICE);
-    }
-}
-
 class LOD implements ArrayAccess
 {
     use LODArrayAccess;
@@ -300,5 +267,38 @@ class LOD implements ArrayAccess
     public function __isset($name)
     {
         return isset($this->{$name});
+    }
+}
+
+// ArrayAccess implementation
+trait LODArrayAccess
+{
+    public function offsetGet($name)
+    {
+        return $this->resolve($name);
+    }
+
+    public function offsetExists($name)
+    {
+        $inst = $this->offsetGet($name);
+        return (is_object($inst) && $inst->exists);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetSet($offset, $value)
+    {
+        trigger_error("LOD array members are read-only", E_USER_NOTICE);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetUnset($offset)
+    {
+        trigger_error("LOD array members are read-only", E_USER_NOTICE);
     }
 }

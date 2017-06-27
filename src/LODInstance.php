@@ -26,93 +26,13 @@ use res\liblod\LODResponse;
 use \ArrayAccess;
 use \Iterator;
 
-// Iterator implementation
-trait LODInstanceIterator
-{
-    public function current()
-    {
-        // Return the full LODStatement at this position in the model
-        return $this->model[$this->position];
-    }
-
-    public function key()
-    {
-        return $this->position;
-    }
-
-    public function next()
-    {
-        ++$this->position;
-    }
-
-    public function rewind()
-    {
-        $this->position = 0;
-    }
-
-    public function valid()
-    {
-        return isset($this->model[$this->position]);
-    }
-}
-
-// ArrayAccess implementation
-trait LODInstanceArrayAccess
-{
-    // an offset is assumed to exist if the query returns a LODInstance
-    // with at least one matching LODStatement in its model
-    public function offsetExists($query)
-    {
-        $instance = $this->filter($query);
-        return count($instance->model) > 0;
-    }
-
-    public function offsetGet($query)
-    {
-        return $this->filter($query);
-    }
-
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function offsetSet($offset, $value)
-    {
-        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
-    }
-
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function offsetUnset($offset)
-    {
-        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
-    }
-}
-
 /**
- * Wrapper for an EasyRdf_Resource.
- *
- * The wrapped EasyRdf_Resource is accessible via:
- *   $instance->model
+ * RDF model with methods for easy access to predicates and objects.
  *
  * The raw triples for the resource represented by this instance are
  * accessible via:
+ *
  *   $instance->model
- *
- * Ideally, ArrayAccess and Iterator methods would be provided to allow idioms
- * such as:
- *
- * * possibly returns an encapsulated array which can be elided to
- *   a string via __toString():-
- *
- *      $labels = $inst['rdfs:label'];
- *
- * * iterate all of the statements relating to the subject:
- *
- *      foreach($inst as $triple)
- *      {
- *          echo "this triple is " . $triple . "\n";
- *      }
  */
 class LODInstance implements ArrayAccess, Iterator
 {
@@ -340,5 +260,68 @@ class FilteredLODInstance extends LODInstance
             return $this->model[0]->object->value;
         }
         return '';
+    }
+}
+
+// Iterator implementation
+trait LODInstanceIterator
+{
+    public function current()
+    {
+        // Return the full LODStatement at this position in the model
+        return $this->model[$this->position];
+    }
+
+    public function key()
+    {
+        return $this->position;
+    }
+
+    public function next()
+    {
+        ++$this->position;
+    }
+
+    public function rewind()
+    {
+        $this->position = 0;
+    }
+
+    public function valid()
+    {
+        return isset($this->model[$this->position]);
+    }
+}
+
+// ArrayAccess implementation
+trait LODInstanceArrayAccess
+{
+    // an offset is assumed to exist if the query returns a LODInstance
+    // with at least one matching LODStatement in its model
+    public function offsetExists($query)
+    {
+        $instance = $this->filter($query);
+        return count($instance->model) > 0;
+    }
+
+    public function offsetGet($query)
+    {
+        return $this->filter($query);
+    }
+
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetSet($offset, $value)
+    {
+        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
+    }
+
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function offsetUnset($offset)
+    {
+        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
     }
 }

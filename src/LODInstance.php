@@ -67,20 +67,13 @@ class LODInstance implements ArrayAccess, Iterator
     protected $statementKeys = array();
 
     // for the iterator
-    private $position = 0;
+    protected $position = 0;
 
-    // This is TRUE if this LODInstance was created by filtering another
-    // LODInstance; this affects how the LODInstance displays: if it's TRUE,
-    // the __toString() method returns the object value of the first triple;
-    // if FALSE, it returns the URI of the LODInstance
-    private $fromFilter;
-
-    public function __construct(LOD $context, $uri, $model=array(), $fromFilter=FALSE)
+    public function __construct(LOD $context, $uri, $model=array())
     {
         $this->context = $context;
         $this->uri = $uri;
         $this->model = $model;
-        $this->fromFilter = $fromFilter;
     }
 
     public function __get($name)
@@ -147,7 +140,7 @@ class LODInstance implements ArrayAccess, Iterator
        type is found */
     public function hasType(...$rdfTypesToMatch)
     {
-        $instanceTypes = $this['rdf:type'];
+        $instanceTypes = $this->filter('rdf:type');
 
         foreach($rdfTypesToMatch as $rdfTypeToMatch)
         {
@@ -247,11 +240,8 @@ class LODInstance implements ArrayAccess, Iterator
 
         usort($filtered, $sortFn);
 
-        // create a new LODInstance with the filtered triples and
-        // $fromFilter=TRUE
-        $instance = new LODInstance($this->context, $this->uri, $filtered, TRUE);
-
-        return $instance;
+        // create a new FilteredLODInstance with the filtered triples
+        return new FilteredLODInstance($this->context, $this->uri, $filtered);
     }
 
     // ArrayAccess implementation
@@ -260,7 +250,7 @@ class LODInstance implements ArrayAccess, Iterator
     // with at least one matching LODStatement in its model
     public function offsetExists($query)
     {
-        $instance = $this->offsetGet($query);
+        $instance = $this->filter($query);
         return count($instance->model) > 0;
     }
 
@@ -288,15 +278,8 @@ class LODInstance implements ArrayAccess, Iterator
     // Iterator implementation
     public function current()
     {
-        // If instance is filtered, return the statement's object as
-        // a LODTerm; otherwise return the full LODStatement
-        $statement = $this->model[$this->position];
-
-        if($this->fromFilter)
-        {
-            return $statement->object;
-        }
-        return $statement;
+        // Return the full LODStatement at this position in the model
+        return $this->model[$this->position];
     }
 
     public function key()
@@ -319,20 +302,38 @@ class LODInstance implements ArrayAccess, Iterator
         return isset($this->model[$this->position]);
     }
 
-    /* Return the subject URI as the string representation of the instance if
-       the instance isn't filtered, or the first value of its first triple
-       if it has been filtered, or an empty string if it has been filtered
-       but has no triples */
+    /* Return the subject URI as the string representation */
     public function __toString()
     {
-        if($this->fromFilter)
-        {
-            if(count($this->model) > 0)
-            {
-                return $this->model[0]->object->value;
-            }
-            return '';
-        }
         return $this->uri;
+    }
+}
+
+/**
+ * A LODInstance which has been created by filtering another LODINstance.
+ * This changes how the LODInstance displays as a string, and how the iterator
+ * code works.
+ */
+class FilteredLODInstance extends LODInstance
+{
+    // Iterator implementation
+    public function current()
+    {
+        // As instance is filtered, return just the statement's object as
+        // a LODTerm
+        $statement = $this->model[$this->position];
+        return $statement->object;
+    }
+
+    /* Return the first value of the instance's first triple, or an empty
+     * string if it has no triples
+     */
+    public function __toString()
+    {
+        if(count($this->model) > 0)
+        {
+            return $this->model[0]->object->value;
+        }
+        return '';
     }
 }

@@ -57,10 +57,13 @@ class LOD implements ArrayAccess
     /* RDF parser */
     protected $parser;
 
+    /* RDF processor */
+    protected $rdf;
+
     /* RDF prefixes */
     public $prefixes = Rdf::COMMON_PREFIXES;
 
-    public function __construct($httpClient=NULL, $parser=NULL)
+    public function __construct($httpClient=NULL, $parser=NULL, $rdf=NULL)
     {
         if(empty($httpClient))
         {
@@ -72,8 +75,14 @@ class LOD implements ArrayAccess
             $parser = new Parser();
         }
 
+        if(empty($rdf))
+        {
+            $rdf = new Rdf();
+        }
+
         $this->httpClient = $httpClient;
         $this->parser = $parser;
+        $this->rdf = $rdf;
     }
 
     /* Set an RDF prefix, which can be used in accessor strings on
@@ -146,16 +155,15 @@ class LOD implements ArrayAccess
         {
             $subjectUri = $triple->subject->value;
 
-            if (isset($this->index[$subjectUri]))
-            {
-                $instance = $this->index[$subjectUri];
-            }
-            else
+            $instance = NULL;
+
+            if (!isset($this->index[$subjectUri]))
             {
                 $instance = new LODInstance($this, $subjectUri);
                 $this->index[$subjectUri] = $instance;
             }
 
+            $instance = $this->index[$subjectUri];
             $instance->add($triple);
         }
     }
@@ -190,7 +198,7 @@ class LOD implements ArrayAccess
         // iterate all statements for the LOD instance, looking for those with
         // subject === URI, predicate === owl:sameAs, object === object resource,
         // and return an array of the URIs of the object resources
-        $owlSameAsPred = Rdf::expandPrefix('owl:sameAs');
+        $owlSameAsPred = $this->rdf->expandPrefix('owl:sameAs');
 
         $sameAsUris = array();
 

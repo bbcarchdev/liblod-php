@@ -65,7 +65,7 @@ class Rdf
 
     // if $predicate is in the form <prefix>:<term>, expand into a full URI
     // using $prefixes (in the same format as PREFIXES)
-    public static function expandPrefix($predicate, $prefixes=NULL)
+    public function expandPrefix($predicate, $prefixes=NULL)
     {
         if($prefixes === NULL)
         {
@@ -93,7 +93,7 @@ class Rdf
      *
      * returns array of LODStatements
      */
-    public static function getTriples($graph, $uri=NULL)
+    public function getTriples($graph, $uri=NULL)
     {
         $triples = array();
 
@@ -123,7 +123,7 @@ class Rdf
     }
 
     // convert a LOD to RDF/Turtle
-    public static function toTurtle($lodORlodinstance)
+    public function toTurtle($lodORlodinstance)
     {
         $statements = NULL;
 
@@ -135,9 +135,14 @@ class Rdf
                 $statements = array_merge($statements, $lodinstance->model);
             }
         }
-        else
+        else if($lodORlodinstance instanceof LODInstance)
         {
             $statements = $lodORlodinstance->model;
+        }
+
+        if(empty($statements))
+        {
+            trigger_error('unable to convert object to Turtle', E_USER_ERROR);
         }
 
         $rawNtriples = '';
@@ -146,7 +151,7 @@ class Rdf
             $rawNtriples .= "$statement .\n";
         }
 
-        Rdf::setNamespaces();
+        $this->setNamespaces();
 
         $graph = new EasyRdf_Graph();
         $parser = new EasyRdf_Parser_Ntriples();
@@ -160,12 +165,12 @@ class Rdf
     // the Util module from working correctly (syntax is PHP7 specific);
     // these functions are used to parse the various parts of a literal represented
     // using the N3.js triple format, as returned by the hardf Turtle parser
-    public static function isLiteral($term)
+    public function isLiteral($term)
     {
         return $term && substr($term, 0, 1) === '"';
     }
 
-    public static function getLiteralValue($literal)
+    public function getLiteralValue($literal)
     {
         // remove the leading "
         $value = substr($literal, 1);
@@ -179,7 +184,7 @@ class Rdf
     }
 
     // returns array('lang' => 'lang string', 'datatype' => '...datatype...')
-    public static function getLiteralLanguageAndDatatype($literal)
+    public function getLiteralLanguageAndDatatype($literal)
     {
         $language = NULL;
         $datatype = NULL;
@@ -216,7 +221,7 @@ class Rdf
      * for EasyRdf_Namespace::set()
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public static function setNamespaces($prefixes=Rdf::COMMON_PREFIXES)
+    public function setNamespaces($prefixes=Rdf::COMMON_PREFIXES)
     {
         foreach($prefixes as $prefix => $fullUri)
         {

@@ -28,11 +28,14 @@ use PHPUnit\Framework\TestCase;
 
 final class LODInstanceTest extends TestCase
 {
+    private $rdf;
     private $testTriples;
     private $testUri = 'http://foo.bar/';
 
     function setUp()
     {
+        $this->rdf = new Rdf();
+
         $this->testTriples = array(
             new LODStatement($this->testUri, 'foaf:page', new LODResource('http://foo.bar/page1')),
             new LODStatement($this->testUri, 'foaf:page', new LODResource('http://foo.bar/page2')),
@@ -62,7 +65,7 @@ final class LODInstanceTest extends TestCase
         $filteredInstance = $instance->filter('foaf:page');
         $this->assertEquals(2, count($filteredInstance->model));
 
-        $expanded = Rdf::expandPrefix('foaf:page', Rdf::COMMON_PREFIXES);
+        $expanded = $this->rdf->expandPrefix('foaf:page', Rdf::COMMON_PREFIXES);
         foreach($filteredInstance->model as $triple)
         {
             $this->assertEquals($expanded, $triple->predicate->value);
@@ -103,7 +106,7 @@ final class LODInstanceTest extends TestCase
         // single predicate via offsetGet
         $filteredInstance1 = $instance['foaf:page'];
         $this->assertEquals(2, count($filteredInstance1->model));
-        $expanded = Rdf::expandPrefix('foaf:page', Rdf::COMMON_PREFIXES);
+        $expanded = $this->rdf->expandPrefix('foaf:page', Rdf::COMMON_PREFIXES);
         foreach($filteredInstance1->model as $triple)
         {
             $this->assertEquals($expanded, $triple->predicate->value);

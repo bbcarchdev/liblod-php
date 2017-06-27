@@ -34,6 +34,11 @@ use \EasyRdf_Graph;
  */
 class Parser
 {
+    public function __construct($rdf=NULL)
+    {
+        $this->rdf = (empty($rdf) ? new Rdf() : $rdf);
+    }
+
     // $rdf is a string of RDF to parse
     // $type is the mime type of the response being parsed; one of
     // text/turtle, application/rdf+xml
@@ -41,19 +46,13 @@ class Parser
     // returns EasyRdf_Graph
     public function parse($rdf, $type)
     {
-        $triplesOut = array();
-
         if(preg_match('|^text/turtle|', $type))
         {
+            $triplesOut = array();
+
             // hardf uses the N3.js triple format
             $parser = new N3Parser(array());
             $triples = $parser->parse($rdf);
-
-            if(count($triples) === 0)
-            {
-                echo "No triples could be parsed out of that there Turtle RDF\n\n";
-                echo $rdf . "\n";
-            }
 
             foreach($triples as $triple)
             {
@@ -61,32 +60,35 @@ class Parser
                 $predicate = new LODResource($triple['predicate']);
                 $object = $triple['object'];
 
-                if(Rdf::isLiteral($object))
+                $obj = NULL;
+
+                if($this->rdf->isLiteral($object))
                 {
-                    $value = Rdf::getLiteralValue($object);
-                    $languageAndType = Rdf::getLiteralLanguageAndDatatype($object);
+                    $value = $this->rdf->getLiteralValue($object);
+                    $languageAndType = $this->rdf->getLiteralLanguageAndDatatype($object);
                     $obj = new LODLiteral($value, $languageAndType);
                 }
-                else
+
+                // fallback: object is a URI
+                if(empty($obj))
                 {
                     $obj = new LODResource($object);
                 }
 
                 $triplesOut[] = new LODStatement($subject, $predicate, $obj);
             }
+
+            return $triplesOut;
         }
         else if(preg_match('|^application/rdf\+xml|', $type))
         {
             $graph = new EasyRdf_Graph();
             $parser = new EasyRdf_Parser_RdfXml();
             $parser->parse($graph, $rdf, 'rdfxml', '');
-            $triplesOut = Rdf::getTriples($graph);
-        }
-        else
-        {
-            trigger_error('No parser for content type ' . $type);
+            return $this->rdf->getTriples($graph);
         }
 
-        return $triplesOut;
+        // if we reach here, we haven't been able to parse the RDF
+        trigger_error('No parser for content type ' . $type);
     }
 }

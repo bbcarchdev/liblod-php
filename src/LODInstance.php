@@ -62,6 +62,9 @@ class LODInstance implements ArrayAccess, Iterator
     /* Array of LODStatement objects */
     protected $model;
 
+    /* RDF processor */
+    protected $rdf;
+
     /* Generated keys of statements in the model (used to prevent
        duplicates */
     protected $statementKeys = array();
@@ -69,11 +72,17 @@ class LODInstance implements ArrayAccess, Iterator
     // for the iterator
     protected $position = 0;
 
-    public function __construct(LOD $context, $uri, $model=array())
+    public function __construct(LOD $context, $uri, $model=array(), $rdf=NULL)
     {
+        if(empty($rdf))
+        {
+            $rdf = new Rdf();
+        }
+
         $this->context = $context;
         $this->uri = $uri;
         $this->model = $model;
+        $this->rdf = $rdf;
     }
 
     public function __get($name)
@@ -144,7 +153,7 @@ class LODInstance implements ArrayAccess, Iterator
 
         foreach($rdfTypesToMatch as $rdfTypeToMatch)
         {
-            $rdfTypeToMatch = Rdf::expandPrefix($rdfTypeToMatch);
+            $rdfTypeToMatch = $this->rdf->expandPrefix($rdfTypeToMatch);
 
             foreach($instanceTypes as $rdfType)
             {
@@ -187,7 +196,7 @@ class LODInstance implements ArrayAccess, Iterator
         $predicates = explode(',', $query);
         foreach($predicates as $index => $predicate)
         {
-            $predicates[$index] = Rdf::expandPrefix(trim($predicate), $prefixes);
+            $predicates[$index] = $this->rdf->expandPrefix(trim($predicate), $prefixes);
         }
 
         $languages = $this->context->languages;

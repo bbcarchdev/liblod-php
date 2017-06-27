@@ -149,49 +149,59 @@ class HttpClient
         return $lodresponses[0];
     }
 
-    // $requestSpecs: array of arrays in format
+    // convert array of URIs to the format required by getAll()
+    // $requestSpecsOrUris: array of arrays in format
     // {'uri' => uri to fetch, 'originalUri' => original URI which led to
     // fetching this one}
-    // or array of URIs (which get converted to this format)
+    // OR array of URIs (which get converted to this format)
     // 'originalUri' is used when fetching the alternate RDF representation of
     // an HTML page
-    function getAll($requestSpecsOrUris)
+    private function normaliseRequestSpecsOrUris($requestSpecsOrUris)
     {
-        $requestSpecs = array();
-        foreach($requestSpecsOrUris as $requestSpecOrUri)
-        {
+        // normalise the request specs or URIs so they can be processed
+        return array_map(function ($requestSpecOrUri) {
             if(is_string($requestSpecOrUri))
             {
-                $requestSpecs[] = array(
-                    'uri' => $requestSpecOrUri,
-                    'originalUri' => $requestSpecOrUri
+                $uri = "$requestSpecOrUri";
+                $requestSpecOrUri = array(
+                    'uri' => $uri,
+                    'originalUri' => $uri
                 );
             }
-            else
+            else if(empty($requestSpecOrUri['originalUri']))
             {
-                if(empty($requestSpecOrUri['originalUri']))
-                {
-                    $requestSpecOrUri['originalUri'] = $requestSpecOrUri['uri'];
-                }
-                $requestSpecs[] = $requestSpecOrUri;
+                $requestSpecOrUri['originalUri'] = $requestSpecOrUri['uri'];
             }
-        }
 
-        $requestOptions = array(
-            'allow_redirects' => array(
-                'max' => $this->maxRedirects
-            ),
-            'headers' => array(
-                'Accept' => $this->accept,
-                'User-Agent' => $this->userAgent
-            )
+            return $requestSpecOrUri;
+        }, $requestSpecsOrUris);
+    }
+
+    // make a LODResponse to encapsulate an error
+    private function makeErrorResponse($uri, $errorCode, $errMsg)
+    {
+        $lodresponse = new LODResponse();
+        $lodresponse->target = $uri;
+        $lodresponse->error = $errorCode;
+        $lodresponse->errMsg = $errMsg;
+        return $lodresponse;
+    }
+
+    // see normaliseToRequestSpecs() for the format required for
+    // $requestSpecsOrUris
+    public function getAll($requestSpecsOrUris)
+    {
+        $requestSpecs = $this->normaliseRequestSpecsOrUris($requestSpecsOrUris);
+
+        $headers = array(
+            'Accept' => $this->accept,
+            'User-Agent' => $this->userAgent
         );
 
         $requests = array();
         foreach($requestSpecs as $requestSpec)
         {
-            $uri = $requestSpec['uri'];
-            $requests[] = new Request('GET', $uri, $requestOptions['headers']);
+            $requests[] = new Request('GET', $requestSpec['uri'], $headers);
         }
 
         // array of LODResponse objects
@@ -229,30 +239,27 @@ class HttpClient
                         'uri' => $location,
                         'originalUri' => $uri
                     );
+
+                    return;
                 }
-                else
-                {
-                    $lodresponse = new LODResponse();
-                    $lodresponse->target = $uri;
-                    $lodresponse->error = 1;
-                    $lodresponse->errMsg = 'HTML page but not RDF link';
-                    $lodresponses[$index] = $lodresponse;
-                }
+
+                // don't know what to do, so add an error
+                $errMsg = 'HTML page but no RDF link';
+                $lodresponses[$index] =
+                    $this->makeErrorResponse($uri, 1, $errMsg);
+
+                return;
             }
-            else
-            {
-                $lodresponse = $this->convertResponse($originalUri, $response);
-                $lodresponses[$index] = $lodresponse;
-            }
+
+            // not HTML, so convert it to a LODResponse
+            $lodresponse = $this->convertResponse($originalUri, $response);
+            $lodresponses[$index] = $lodresponse;
         };
 
         $rejectedFn = function($reason, $index) use(&$lodresponses, $requestSpecs)
         {
-            $lodresponse = new LODResponse();
-            $lodresponse->target = $requestSpecs[$index]['uri'];
-            $lodresponse->error = 1;
-            $lodresponse->errMsg = $reason;
-            $lodresponses[$index] = $lodresponse;
+            $uri = $requestSpecs[$index]['uri'];
+            $lodresponses[$index] = $this->makeErrorResponse($uri, 1, $reason);
         };
 
         $options = array(

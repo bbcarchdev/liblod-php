@@ -23,11 +23,18 @@ use PHPUnit\Framework\TestCase;
 
 final class RdfTest extends TestCase
 {
+    private $rdf;
+
+    public function setUp()
+    {
+         $this->rdf = new Rdf();
+    }
+
     public function testGetLiteralLanguage()
     {
         $str = '"Judi Dench"@en-gb';
         $expected = 'en-gb';
-        $actual = Rdf::getLiteralLanguageAndDatatype($str)['lang'];
+        $actual = $this->rdf->getLiteralLanguageAndDatatype($str)['lang'];
         $this->assertEquals($expected, $actual);
     }
 
@@ -35,7 +42,7 @@ final class RdfTest extends TestCase
     {
         $str = '"Judi Dench"^^<http://foo.bar/mytype>';
         $expected = 'http://foo.bar/mytype';
-        $actual = Rdf::getLiteralLanguageAndDatatype($str)['datatype'];
+        $actual = $this->rdf->getLiteralLanguageAndDatatype($str)['datatype'];
         $this->assertEquals($expected, $actual);
     }
 
@@ -44,18 +51,18 @@ final class RdfTest extends TestCase
         $expected = 'Judi Dench';
 
         $str = '"Judi Dench"^^<http://foo.bar/mytype>';
-        $actual = Rdf::getLiteralValue($str);
+        $actual = $this->rdf->getLiteralValue($str);
         $this->assertEquals($expected, $actual);
 
         $str = '"Judi Dench"@en-gb';
-        $actual = Rdf::getLiteralValue($str);
+        $actual = $this->rdf->getLiteralValue($str);
         $this->assertEquals($expected, $actual);
     }
 
     public function testExpandPrefix()
     {
         $expected = 'http://purl.org/dc/dcmitype/StillImage';
-        $actual = Rdf::expandPrefix('dcmitype:StillImage');
+        $actual = $this->rdf->expandPrefix('dcmitype:StillImage');
         $this->assertEquals($expected, $actual);
     }
 }

@@ -34,38 +34,47 @@ class LODStatement
     // $objOrSpec can either be a LODTerm instance or an options array like
     // { 'value' => 'somestring', 'type' => 'uri|literal',
     //   'datatype' => 'xsd:...' || 'lang' => 'en'}
-    public function __construct($subj, $pred, $objOrSpec, $prefixes=NULL)
+    public function __construct($subj, $pred, $objOrSpec, $prefixes=Rdf::COMMON_PREFIXES, $rdf=NULL)
     {
-        if($prefixes === NULL)
+        if(empty($rdf))
         {
-            $prefixes = Rdf::COMMON_PREFIXES;
+            $rdf = new Rdf();
         }
 
         if(!($subj instanceof LODResource))
         {
-            $subj = new LODResource(Rdf::expandPrefix($subj, $prefixes));
+            $subj = new LODResource($rdf->expandPrefix($subj, $prefixes));
         }
 
         if(!($pred instanceof LODResource))
         {
-            $pred = new LODResource(Rdf::expandPrefix($pred, $prefixes));
+            $pred = new LODResource($rdf->expandPrefix($pred, $prefixes));
         }
 
+        $obj = NULL;
+
+        // already a term
         if($objOrSpec instanceof LODTerm)
         {
             $obj = $objOrSpec;
         }
-        else if($objOrSpec['type'] === 'uri')
+
+        // fallback: it's a spec for a literal or URI
+        if(empty($obj))
         {
-            $obj = new LODResource(Rdf::expandPrefix($objOrSpec['value'], $prefixes));
-        }
-        else
-        {
-            if(isset($objOrSpec['datatype']))
-            {
-                $objOrSpec['datatype'] = Rdf::expandPrefix($objOrSpec['datatype'], $prefixes);
-            }
-            $obj = new LODLiteral($objOrSpec['value'], $objOrSpec);
+          if($objOrSpec['type'] === 'literal')
+          {
+              if(isset($objOrSpec['datatype']))
+              {
+                  $objOrSpec['datatype'] =
+                      $rdf->expandPrefix($objOrSpec['datatype'], $prefixes);
+              }
+              $obj = new LODLiteral($objOrSpec['value'], $objOrSpec);
+          }
+          else if($objOrSpec['type'] === 'uri')
+          {
+              $obj = new LODResource($rdf->expandPrefix($objOrSpec['value'], $prefixes));
+          }
         }
 
         $this->subject = $subj;
@@ -79,22 +88,22 @@ class LODStatement
         $str = '<' . $this->subject->__toString() . '> ' .
                '<' . $this->predicate->__toString() . '> ';
 
+        // uri
         if($this->object->isResource())
         {
-            $objStr = '<' . $this->object->__toString() . '>';
+            return $str . '<' . $this->object->__toString() . '>';
         }
-        else
-        {
-            $objStr = json_encode($this->object->__toString());
 
-            if($this->object->language)
-            {
-                $objStr .= '@' . $this->object->language;
-            }
-            else if($this->object->datatype)
-            {
-                $objStr .= '^^<' . $this->object->datatype . '>';
-            }
+        // literal
+        $objStr = json_encode($this->object->__toString());
+
+        if($this->object->language)
+        {
+            $objStr .= '@' . $this->object->language;
+        }
+        else if($this->object->datatype)
+        {
+            $objStr .= '^^<' . $this->object->datatype . '>';
         }
 
         return $str . $objStr;

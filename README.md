@@ -76,6 +76,20 @@ php tools/phpunit.phar --bootstrap vendor/autoload.php --coverage-html cov --whi
 
 The report can be viewed by opening `cov/index.html` in a web browser.
 
+## Code quality
+
+Code quality checks can be run with:
+
+```
+# shortcut
+./build.sh mess
+
+# full
+php vendor/bin/phpmd src text cleancode,codesize,design,naming,unusedcode
+```
+
+This uses [PHPMD](https://phpmd.org/) to report on various issues with the code.
+
 ## Authors
 
 API design by [Mo McRoberts](https://github.com/nevali).
@@ -104,5 +118,6 @@ res/liblod depends on these libraries (which are licensed as stated):
 * [easyrdf/easyrdf](http://easyrdf.org/) - [BSD 3-clause licence](https://github.com/njh/easyrdf/blob/master/LICENSE.md)
 * [guzzlehttp/psr7](http://guzzlephp.org/) - [MIT licence](https://github.com/guzzle/guzzle/blob/master/LICENSE)
 * [guzzlehttp/guzzle](http://guzzlephp.org/) - [MIT licence](https://github.com/guzzle/guzzle/blob/master/LICENSE)
+* [phpmd/phpmd](https://phpmd.org/) - [BSD 3-clause licence](https://github.com/phpmd/phpmd/blob/master/LICENSE)
 
 Note that these libraries are not distributed with res/liblod.

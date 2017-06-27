@@ -28,6 +28,9 @@ case "$1" in
     echo "Running unit test suite with code coverage reporting; see cov/index.html"
     php tools/phpunit.phar --bootstrap vendor/autoload.php --whitelist src --coverage-html cov tests/unit
   ;;
+  mess)
+    php vendor/bin/phpmd src text cleancode,codesize,design,naming,unusedcode
+  ;;
   *)
     echo "Running unit test suite"
     php tools/phpunit.phar --bootstrap vendor/autoload.php tests/unit

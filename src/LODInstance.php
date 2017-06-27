@@ -66,7 +66,7 @@ class LODInstance implements ArrayAccess, Iterator
     protected $rdf;
 
     /* Generated keys of statements in the model (used to prevent
-       duplicates */
+       duplicates) */
     protected $statementKeys = array();
 
     // for the iterator

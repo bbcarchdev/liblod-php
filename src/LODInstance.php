@@ -39,25 +39,45 @@ class LODInstance implements ArrayAccess, Iterator
     use LODInstanceIterator;
     use LODInstanceArrayAccess;
 
-    /* The LOD context we come from */
+    /**
+     * The LOD context this instance comes from.
+     * @property LOD $context
+     */
     protected $context;
 
-    /* The subject URI of this instance */
+    /**
+     * The subject URI of this instance.
+     * @property string $uri
+     */
     protected $uri;
 
-    /* Array of LODStatement objects */
+    /**
+     * Array of res\liblod\LODStatement objects
+     * @property array $model
+     */
     protected $model;
 
-    /* RDF processor */
-    protected $rdf;
-
-    /* Generated keys of statements in the model (used to prevent
-       duplicates) */
-    protected $statementKeys = array();
-
-    // for the iterator
+    // for the iterator; NB has to be protected so the FilteredLODInstance
+    // can access it
     protected $position = 0;
 
+    // res\liblod\RDF helper
+    private $rdf;
+
+    // Generated keys of statements in the model (used to prevent
+    // duplicates)
+    private $statementKeys = array();
+
+    /**
+     * Constructor.
+     *
+     * @param res\liblod\LOD $context
+     * @param string $uri
+     * @param array $model Array of res\liblod\LODStatement objects belonging
+     * to this instance; all of these statements should have the same
+     * subject URI.
+     * @param res\liblod\Rdf $rdf RDF helper
+     */
     public function __construct(LOD $context, $uri, $model=array(), $rdf=NULL)
     {
         if(empty($rdf))
@@ -100,6 +120,8 @@ class LODInstance implements ArrayAccess, Iterator
     /**
      * Add a LODStatement, but only if the same subject+predicate+object isn't
      * already in the model.
+     *
+     * @param res\liblod\LODStatement $statement
      */
     public function add($statement)
     {
@@ -111,16 +133,27 @@ class LODInstance implements ArrayAccess, Iterator
         }
     }
 
-    /* Return true if the subject exists in the related context */
+    /**
+     * Check whether the URI of this instance exists in the LOD context
+     * associated with it.
+     *
+     * @return bool TRUE if the subject exists in the related context
+     */
     public function exists()
     {
         $found = $this->context->locate($this->uri);
         return $found !== FALSE;
     }
 
-    /* Returns TRUE if this instance has rdf:type <$rdfType>;
-       if multiple types are passed, this returns as soon as one matching
-       type is found */
+    /**
+     * Check whether this instance has one of the specified $rdfTypesToMatch.
+     * NB if multiple types are passed as arguments, this returns as soon as
+     * one matching type is found.
+     *
+     * @param ...string $rdfTypesToMatch One or more RDF URIs to check for
+     *
+     * @return bool TRUE if this instance has rdf:type <$rdfType>
+     */
     public function hasType(...$rdfTypesToMatch)
     {
         $instanceTypes = $this->filter('rdf:type');
@@ -160,7 +193,10 @@ class LODInstance implements ArrayAccess, Iterator
      *
      * NB this is the method behind the array accessor methods.
      *
-     * Returns a LODInstance containing matching triples.
+     * @param string $query Predicates to query for; see description for syntax.
+     *
+     * @return res\liblod\FilteredLODInstance An instance containing matching
+     * triples.
      */
     public function filter($query)
     {
@@ -227,7 +263,12 @@ class LODInstance implements ArrayAccess, Iterator
         return new FilteredLODInstance($this->context, $this->uri, $filtered);
     }
 
-    /* Return the subject URI as the string representation */
+    /**
+     * Create a string representation of this instance.
+     *
+     * @return string The subject URI is used as the string representation
+     * for an unfiltered LODInstance
+     */
     public function __toString()
     {
         return $this->uri;
@@ -241,17 +282,24 @@ class LODInstance implements ArrayAccess, Iterator
  */
 class FilteredLODInstance extends LODInstance
 {
-    // Iterator implementation
+    /**
+     * Gets the object of the LODStatement at the current iterator position.
+     * As instance is filtered, this returns just the statement's object as
+     * a LODTerm, rather than the full LODTerm.
+     *
+     * @return LODTerm The object of the statement at the current position
+     */
     public function current()
     {
-        // As instance is filtered, return just the statement's object as
-        // a LODTerm
         $statement = $this->model[$this->position];
         return $statement->object;
     }
 
-    /* Return the first value of the instance's first triple, or an empty
-     * string if it has no triples
+    /**
+     * Create a string representation of the instance.
+     *
+     * @return string This will be the first value of the instance's first
+     * triple, or an empty string if it has no triples
      */
     public function __toString()
     {
@@ -266,9 +314,13 @@ class FilteredLODInstance extends LODInstance
 // Iterator implementation
 trait LODInstanceIterator
 {
+    /**
+     * Get the statement at the current iterator position.
+     *
+     * @return LODStatement The full LODStatement at this position in the model
+     */
     public function current()
     {
-        // Return the full LODStatement at this position in the model
         return $this->model[$this->position];
     }
 
@@ -296,8 +348,13 @@ trait LODInstanceIterator
 // ArrayAccess implementation
 trait LODInstanceArrayAccess
 {
-    // an offset is assumed to exist if the query returns a LODInstance
-    // with at least one matching LODStatement in its model
+    /**
+     * Check whether an offset exists in the instance; "exists" is assumed to
+     * mean that the query returns a LODInstance with at least one matching
+     * LODStatement in its model.
+     *
+     * @return bool
+     */
     public function offsetExists($query)
     {
         $instance = $this->filter($query);

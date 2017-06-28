@@ -26,45 +26,102 @@ use res\liblod\Rdf;
 
 use \ArrayAccess;
 
+/**
+ * RDF context, containing merged RDF from all of the URIs resolved against it.
+ */
 class LOD implements ArrayAccess
 {
     use LODArrayAccess;
 
-    /* Languages we prefer to get literals in (first in the list has highest
-       priority) */
+    /**
+     * Languages we prefer to get literals in (first in the list has highest
+     * priority).
+     * @property array $languages
+     */
     public $languages = array('en-gb', 'en');
 
-    /* The most recently-fetched URI */
+    /**
+     * The most recently-fetched URI.
+     * @property string $subject
+     */
     protected $subject;
 
-    /* The most recently-fetched document URL (content-location or $subject
-       if content-location not set) */
+    /**
+     * The most recently-fetched document URL (content-location or URI
+     * if content-location not set).
+     * @property string $document
+     */
     protected $document;
 
-    /* HTTP status from the most recent fetch */
+    /**
+     * HTTP status from the most recent fetch.
+     * @property int $status
+     */
     protected $status;
 
-    /* The error code from the most recent fetch */
+    /**
+     * The error code from the most recent fetch.
+     * @property int $error
+     */
     protected $error;
 
-    /* The error message from the most recent fetch */
+    /**
+     * The error message from the most recent fetch.
+     * @property string $errMsg
+     */
     protected $errMsg;
 
-    /* The RDF "index" (map from subject URIs to LODInstance objects) */
+    /**
+     * The RDF "index" (map from subject URIs to LODInstance objects).
+     * @property array $index
+     */
     protected $index = array();
 
-    /* HTTP client */
-    protected $httpClient;
-
-    /* RDF parser */
-    protected $parser;
-
-    /* RDF processor */
-    protected $rdf;
-
-    /* RDF prefixes */
+    /**
+     * RDF prefix map.
+     * @property array $prefixes Map from RDF prefixes to full URIs.
+     */
     public $prefixes = Rdf::COMMON_PREFIXES;
 
+    // HTTP client
+    private $httpClient;
+
+    // RDF parser
+    private $parser;
+
+    // RDF helper
+    private $rdf;
+
+    // Process a LODResponse into the model; return the LODInstance, or FALSE
+    // if the fetch failed
+    private function process(LODResponse $response)
+    {
+        $this->status = $response->status;
+        $this->error = $response->error;
+        $this->errMsg = $response->errMsg;
+
+        if($response->error)
+        {
+            return FALSE;
+        }
+
+        // save the subject and document URIs
+        $this->subject = $response->target;
+        $this->document = $response->contentLocation;
+
+        // make a graph from the response
+        $this->loadRdf($response->payload, $response->type);
+
+        return TRUE;
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param res\liblod\HttpClient $httpClient
+     * @param res\liblod\Parser $parser
+     * @param res\liblod\Rdf $rdf
+     */
     public function __construct($httpClient=NULL, $parser=NULL, $rdf=NULL)
     {
         if(empty($httpClient))
@@ -87,15 +144,22 @@ class LOD implements ArrayAccess
         $this->rdf = $rdf;
     }
 
-    /* Set an RDF prefix, which can be used in accessor strings on
-       LODInstances */
+    /**
+     * Set an RDF prefix, which can be used in query strings on
+     * LODInstances created from this context.
+     *
+     * @param string $prefix For example, 'rdfs'.
+     * @param string $uri Full URI the prefix maps to,
+     * e.g. 'http://www.w3.org/2000/01/rdf-schema#'.
+     */
     public function setPrefix($prefix, $uri)
     {
         $this->prefixes[$prefix] = $uri;
     }
 
-    /* Resolve a LOD URI, potentially fetching data.
-     * Returns a LODInstance or FALSE on hard error.
+    /**
+     * Resolve a LOD URI, potentially fetching data.
+     * @return LODInstance|FALSE
      */
     public function resolve($uri)
     {
@@ -107,9 +171,12 @@ class LOD implements ArrayAccess
         return $found;
     }
 
-    /* Attempt to locate a subject within the context's model, but don't
+    /**
+     * Attempt to locate a subject within the index, but don't
      * try to fetch it if it's not present.
-     * Returns a LODInstance or false if the URI doesn't exist in the model.
+     *
+     * @return LODInstance|FALSE Returns FALSE if the URI doesn't exist in the
+     * context.
      */
     public function locate($uri)
     {
@@ -117,36 +184,75 @@ class LOD implements ArrayAccess
         return ($hasUri ? $this->index[$uri] : FALSE);
     }
 
-    /* Fetch data about a subject over HTTP (irrespective of
-     * whether it already exists in the model) and process into
-     * the model.
-     * Returns a LODInstance or false on hard error.
+    /**
+     * Fetch data about a subject over HTTP (irrespective of
+     * whether it already exists in the index) and process into
+     * the index.
+     *
+     * @param string $uri URI to fetch over HTTP
+     *
+     * @return LODInstance|FALSE Returns false if $uri can't be fetched, the
+     * response can't be processed, or if the URI can't be located in the model
+     * after the fetch.
      */
     public function fetch($uri)
     {
         $response = $this->httpClient->get($uri);
-        $this->process($response);
+        if($response->error > 0)
+        {
+            return FALSE;
+        }
+
+        $result = $this->process($response);
+        if(!$result)
+        {
+            return FALSE;
+        }
+
         return $this->locate($uri);
     }
 
-    /* Fetch multiple URIs; NB this doesn't return anything, but just
-       sets up the graph quickly ready for querying later;
-       $uris is an array of URIs to fetch;
-       $this->status, $this->error and $this->errMsg are set from the
-       last-fetched URI; returns TRUE if all responses were successful,
-       FALSE otherwise */
+    /**
+     * Fetch multiple URIs; NB this just sets up the index quickly ready for
+     * querying later but is difficult to debug, as we just return a
+     * single boolean regardless of where the failure occurred.
+     *
+     * $this->status, $this->error and $this->errMsg are set from the
+     * last-fetched URI.
+     *
+     * @param array $uris Array of URIs to fetch
+     *
+     * @return TRUE if all responses were successful and processed, FALSE
+     * otherwise
+     */
     public function fetchAll($uris)
     {
         $responses = $this->httpClient->getAll($uris);
 
+        $success = TRUE;
         foreach($responses as $response)
         {
-            $this->process($response);
+            if($response->error > 0)
+            {
+                $success = FALSE;
+            }
+
+            $result = $this->process($response);
+            if(!$result)
+            {
+                $success = FALSE;
+            }
         }
+
+        return $success;
     }
 
-    /* Manually load some RDF into the model;
-       type should be 'text/turtle' or 'application/rdf+xml' */
+    /**
+     * Manually load some RDF into the index.
+     *
+     * @param string $rdf RDF to load
+     * @param string $type Sshould be 'text/turtle' or 'application/rdf+xml'
+     */
     public function loadRdf($rdf, $type)
     {
         // make a graph from the response
@@ -170,31 +276,14 @@ class LOD implements ArrayAccess
         }
     }
 
-    /* Process a LODResponse into the model; return the LODInstance, or FALSE
-       if the fetch failed */
-    private function process(LODResponse $response)
-    {
-        $this->status = $response->status;
-        $this->error = $response->error;
-        $this->errMsg = $response->errMsg;
-
-        if($response->error)
-        {
-            return FALSE;
-        }
-
-        // save the subject and document URIs
-        $this->subject = $response->target;
-        $this->document = $response->contentLocation;
-
-        // make a graph from the response
-        $this->loadRdf($response->payload, $response->type);
-
-        return TRUE;
-    }
-
-    /* Fetch an array of ?sameAs URIs which match the pattern
-       ?sameAs owl:sameAs $uri */
+    /**
+     * Fetch an array of ?sameAs URIs which match the pattern
+     * ?sameAs owl:sameAs $uri.
+     *
+     * @param string $uri
+     *
+     * @return array Array of matching URIs
+     */
     public function getSameAs($uri)
     {
         // iterate all statements for the LOD instance, looking for those with

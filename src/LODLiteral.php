@@ -21,14 +21,33 @@ namespace res\liblod;
 
 use res\liblod\LODTerm;
 
+/**
+ * An RDF literal.
+ */
 class LODLiteral extends LODTerm
 {
+    /**
+     * RDF data type for the literal, in full URI form, e.g.
+     * 'http://www.w3.org/2001/XMLSchema#string'.
+     * @property string $datatype
+     */
     public $datatype = NULL;
+
+    /**
+     * RDF language tag for the literal, e.g. 'en-gb'.
+     * @property string $language
+     */
     public $language = NULL;
 
-    // $spec may contain a 'lang' or 'datatype' key;
-    // 'datatype' should be an expanded (not prefixed) URI for the datatype
-    // of the literal
+    /**
+     * Constructor.
+     *
+     * @param string $value Value for the literal
+     * @param array $spec May contain a 'lang' or 'datatype' key;
+     * 'lang' should be an RDF language tag;
+     * 'datatype' should be an expanded (not prefixed) URI for the datatype
+     * of the literal.
+     */
     public function __construct($value, $spec=array())
     {
         parent::__construct($value);
@@ -43,6 +62,11 @@ class LODLiteral extends LODTerm
         }
     }
 
+    /**
+     * Check whether this is a resource. Always returns FALSE.
+     *
+     * @return bool
+     */
     public function isResource()
     {
         return FALSE;

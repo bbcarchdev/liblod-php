@@ -43,6 +43,11 @@ case "$1" in
       echo $result
     fi
   ;;
+  docs)
+    echo "Generating API documentation in apidocs/"
+    rm -Rf apidocs/
+    php tools/phpDocumentor.phar -d src -t apidocs --template=responsive-twig
+  ;;
   *)
     echo "./build.sh install|unit|int|cov|mess"
   ;;

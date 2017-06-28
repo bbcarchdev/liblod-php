@@ -29,10 +29,11 @@ use EasyRdf_Namespace;
 use res\liblod\LOD;
 
 /**
- * RDF helper functions
+ * RDF helper.
  */
 class Rdf
 {
+    /* Commonly-used RDF prefixes */
     const COMMON_PREFIXES = array(
         'bibo' => 'http://purl.org/ontology/bibo/',
         'cc' => 'http://creativecommons.org/ns#',
@@ -65,18 +66,21 @@ class Rdf
         'xsd' => 'http://www.w3.org/2001/XMLSchema#'
     );
 
-    // if $predicate is in the form <prefix>:<term>, expand into a full URI
-    // using $prefixes (in the same format as PREFIXES)
-    public function expandPrefix($predicate, $prefixes=NULL)
+    /**
+     * Expand a URI in the form <prefix>:<term> into a full URI, using
+     * $prefixes as the map from prefixes to full URIs.
+     *
+     * @param string $uri URI to expand
+     * @param array $prefixes Associative array whose keys are prefixes and
+     * values are full URIs; defaults to res\liblod\Rdf::COMMON_PREFIXES
+     *
+     * @return string
+     */
+    public function expandPrefix($uri, $prefixes=Rdf::COMMON_PREFIXES)
     {
-        if($prefixes === NULL)
+        if(substr($uri, 0, 4) !== 'http')
         {
-            $prefixes = self::COMMON_PREFIXES;
-        }
-
-        if(substr($predicate, 0, 4) !== 'http')
-        {
-            $parts = explode(':', $predicate);
+            $parts = explode(':', $uri);
             $prefix = $parts[0];
 
             if(array_key_exists($prefix, $prefixes))
@@ -84,15 +88,16 @@ class Rdf
                 return $prefixes[$prefix] . $parts[1];
             }
         }
-        return $predicate;
+        return $uri;
     }
 
     /**
-     * Convert an EasyRdf_Graph into an array of triples.
+     * Convert an EasyRdf_Graph into an array of res\liblod\LODStatement
+     * objects.
      *
-     * $graph EasyRdf_Graph
+     * @param EasyRdf_Graph $graph
      *
-     * returns array of LODStatements
+     * @return res\liblod\LODStatement[]
      */
     public function getTriples($graph)
     {
@@ -120,6 +125,11 @@ class Rdf
 
     /**
      * Convert a LOD or LODInstance to RDF/Turtle.
+     *
+     * @param mixed $lodORlodinstance LOD or LODInstance object to convert
+     * @param array $prefixes Map from prefixes to full URIs
+     *
+     * @return string RDF in Turtle format
      *
      * for EasyRdf_Namespace::set()...
      * @SuppressWarnings(PHPMD.StaticAccess)
@@ -160,15 +170,32 @@ class Rdf
         return $serialiser->serialise($graph, 'turtle');
     }
 
-    // these are adapted from the hardf source, which has a bug which prevents
-    // the Util module from working correctly (syntax is PHP7 specific);
+    // the following are adapted from the hardf source, which has a bug which
+    // prevents the Util module from working correctly (syntax is PHP7 specific);
     // these functions are used to parse the various parts of a literal represented
     // using the N3.js triple format, as returned by the hardf Turtle parser
+
+    /**
+     * Check whether $term is a literal.
+     *
+     * @param string $term
+     *
+     * @return bool
+     */
     public function isLiteral($term)
     {
         return $term && substr($term, 0, 1) === '"';
     }
 
+    /**
+     * Extract the value from a literal.
+     *
+     * @param string $literal Literal in format "value"@lang or
+     * "value"^^datatype
+     *
+     * @return string The value of the literal, minus quotes and datatype
+     * or language specifier
+     */
     public function getLiteralValue($literal)
     {
         // remove the leading "
@@ -182,7 +209,15 @@ class Rdf
         return $value;
     }
 
-    // returns array('lang' => 'lang string', 'datatype' => '...datatype...')
+    /**
+     * Extract the datatype and language from a literal string.
+     *
+     * @param string $literal Literal in format "value"@lang or
+     * "value"^^datatype
+     *
+     * @return array in format
+     * array('lang' => 'lang string', 'datatype' => '...datatype...')
+     */
     public function getLiteralLanguageAndDatatype($literal)
     {
         $language = NULL;
@@ -197,7 +232,7 @@ class Rdf
             $lastPart = substr($literal, $lastQuotePos + 1);
 
             // get the part after the '@'; note that a literal shouldn't have a
-            // type and a language
+            // type *and* a language
             $matches = array();
             if(preg_match('|@([^@]+)|', $lastPart, $matches))
             {

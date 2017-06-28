@@ -25,16 +25,43 @@ use res\liblod\LODStatement;
 use res\liblod\LODTerm;
 use res\liblod\Rdf;
 
+/**
+ * Represents a single RDF statement with subject, predicate and object.
+ */
 class LODStatement
 {
+    /**
+     * Subject of the statement.
+     * @property res\liblod\LODResource $subject
+     */
     public $subject;
+
+    /**
+     * Predicate of the statement.
+     * @property res\liblod\LODResource $predicate
+     */
     public $predicate;
+
+    /**
+     * Object of the statement.
+     * @property res\liblod\LODTerm $object
+     */
     public $object;
 
-    // $objOrSpec can either be a LODTerm instance or an options array like
-    // { 'value' => 'somestring', 'type' => 'uri|literal',
-    //   'datatype' => 'xsd:...' || 'lang' => 'en'}
-    public function __construct($subj, $pred, $objOrSpec, $prefixes=Rdf::COMMON_PREFIXES, $rdf=NULL)
+    /**
+     * Constructor.
+     *
+     * @param string|res\liblod\LODResource $subj Subject of the statement
+     * @param string|res\liblod\LODResource $pred Predicate of the statement
+     * @param array|res\liblod\LODTerm $objOrSpec Object of the statement;
+     * $objOrSpec can either be a LODTerm instance or an options array like
+     * [ 'value' => 'somestring', 'type' => 'uri|literal',
+     *   'datatype' => 'xsd:...' || 'lang' => 'en' ]
+     * @param array $prefixes Map from prefixes to full URIs
+     * @param res\liblod\Rdf $rdf RDF helper
+     */
+    public function __construct($subj, $pred, $objOrSpec,
+    $prefixes=Rdf::COMMON_PREFIXES, $rdf=NULL)
     {
         if(empty($rdf))
         {
@@ -82,7 +109,14 @@ class LODStatement
         $this->object = $obj;
     }
 
-
+    /**
+     * Get a representation of this statement as an N-Triples compatible string.
+     *
+     * @return string Examples:
+     * <http://res/Frank> <http://www.w3.org/2000/01/rdf-schema#seeAlso> <http://res/Frankie>
+     * <http://res/Frank> <http://www.w3.org/2000/01/rdf-schema#label> "Frank"@en-gb
+     * <http://res/Frank> <http://xmlns.com/foaf/0.1/age> "5"^^<http://www.w3.org/2001/XMLSchema#integer>
+     */
     public function __toString()
     {
         $str = '<' . $this->subject->__toString() . '> ' .
@@ -111,7 +145,10 @@ class LODStatement
 
     /**
      * Generate a key which uniquely-identifies the statement, using
-     * a hash of its subject+predicate+object values + object datatype/lang
+     * a hash of its subject+predicate+object values + object datatype/lang.
+     *
+     * @return string Hash unique to a statement with this subject, predicate
+     * and object
      */
     public function getKey()
     {

@@ -58,7 +58,7 @@ To run the integration tests:
 php tools/phpunit.phar --bootstrap vendor/autoload.php tests/integration
 ```
 
-**Note that the integration tests work against the live [Acropolis stack](http://acropolis.org.uk/) and other LOD sites, so you will need a network connection to run them. They can also be somewhat fragile, as the number of statements for Acropolis resources may periodically change, depending on what's being ingested. This can cause occasionally cause test failures.**
+**Note that the integration tests work against the live [Acropolis stack](http://acropolis.org.uk/) and other LOD sites, so you will need a network connection to run them. They can also be somewhat fragile, as the number of statements for Acropolis resources may periodically change, depending on what's being ingested. This can occasionally cause test failures.**
 
 ## Code coverage
 
@@ -88,6 +88,18 @@ php vendor/bin/phpmd src text cleancode,codesize,design,naming,unusedcode
 
 This uses [PHPMD](https://phpmd.org/) to report on various issues with the code.
 
+## API docs
+
+Rudimentary (incomplete) API docs can be generated with:
+
+```
+# shortcut
+./build.sh docs
+
+# full
+php tools/phpDocumentor.phar -d src -t apidocs --template=responsive-twig
+```
+
 ## Authors
 
 API design by [Mo McRoberts](https://github.com/nevali).
@@ -105,17 +117,23 @@ Copyright © 2017 BBC
 liblod-php is licensed under the terms of the Apache License, Version 2.0
 (see LICENCE-APACHE.txt).
 
-The liblod-php code base distributes the following software:
+The liblod-php code base distributes the following software (used during development):
 
-* [PHPUnit](http://phpunit.de/): distributed under the [3-clause BSD licence](https://opensource.org/licenses/BSD-3-Clause). See `tools/LICENCE-PHPUNIT-BSD3.txt` for the full licence.
 * [Composer](http://getcomposer.org/): distributed under the [MIT licence](https://opensource.org/licenses/MIT). See `tools/LICENCE-COMPOSER-MIT.txt` for the full licence.
+* [PHPUnit](http://phpunit.de/): distributed under the [3-clause BSD licence](https://opensource.org/licenses/BSD-3-Clause). See `tools/LICENCE-PHPUNIT-BSD3.txt` for the full licence.
+* [phpDocumentor](https://www.phpdoc.org/): distributed under the [MIT licence](https://github.com/phpDocumentor/phpDocumentor2/blob/develop/LICENSE). See `tools/LICENCE-PHPDOCUMENTOR-MIT.txt` for the full licence.
 
-liblod-php depends on these libraries (which are licensed as stated):
+(NB these libraries are distributed with the source because they cause version clashes with dependencies used by the runtime library or are inconvenient to install.)
+
+liblod-php depends on these libraries at runtime (which are licensed as stated):
 
 * [pietercolpaert/hardf](https://github.com/pietercolpaert/hardf) - [MIT licence](https://github.com/pietercolpaert/hardf/blob/master/LICENSE)
 * [easyrdf/easyrdf](http://easyrdf.org/) - [BSD 3-clause licence](https://github.com/njh/easyrdf/blob/master/LICENSE.md)
 * [guzzlehttp/psr7](http://guzzlephp.org/) - [MIT licence](https://github.com/guzzle/guzzle/blob/master/LICENSE)
 * [guzzlehttp/guzzle](http://guzzlephp.org/) - [MIT licence](https://github.com/guzzle/guzzle/blob/master/LICENSE)
+
+liblod-php depends on these libraries for development (which are licensed as stated):
+
 * [phpmd/phpmd](https://phpmd.org/) - [BSD 3-clause licence](https://github.com/phpmd/phpmd/blob/master/LICENSE)
 
-Note that these libraries are not distributed with liblod-php.
+Note that neither the runtime nor development libraries are distributed with liblod-php.

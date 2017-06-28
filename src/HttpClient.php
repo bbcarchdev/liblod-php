@@ -29,22 +29,40 @@ use \GuzzleHttp\Client as GuzzleClient;
 use \GuzzleHttp\Exception\ClientException;
 use \DOMDocument;
 
+/**
+ * Wrapper round the Guzzle HTTP client, specialised for fetching and parsing
+ * RDF.
+ */
 class HttpClient
 {
     const RDF_TYPES = array('text/turtle', 'application/rdf+xml');
 
-    /* Guzzle client */
-    private $client;
-
-    /* The HTTP user agent used in requests */
+    /**
+     * The HTTP user agent header value used in requests.
+     * @property string $userAgent
+     */
     public $userAgent = 'liblod/PHP';
 
-    /* The HTTP "Accept" header used in requests */
+    /**
+     * The HTTP "Accept" header value used in requests.
+     * @property string $accept
+     */
     public $accept = 'text/turtle;q=0.95, application/rdf+xml;q=0.5, text/html;q=0.1';
 
-    /* Maximum number of redirects to follow */
+    /**
+     * Maximum number of redirects to follow.
+     * @property int $maxRedirects
+     */
     public $maxRedirects = 10;
 
+    // Guzzle client
+    private $client;
+
+    /**
+     * Constructor.
+     *
+     * @param GuzzleHttp\Client $client
+     */
     public function __construct($client=NULL)
     {
         if(empty($client))
@@ -80,7 +98,11 @@ class HttpClient
     }
 
     /**
-     * $uri is used to make the <link rel="alternate"> href absolute
+     * Extract <link rel="alternate" type="text/turtle|application/rdf+xml" ...>
+     * from HTML.
+     *
+     * @param string $html HTML to parse for an RDF link
+     * @param string $uri URI used to make the <link rel="alternate"> href absolute.
      *
      * for UriResolver::resolve()
      * @SuppressWarnings(PHPMD.StaticAccess)
@@ -141,10 +163,6 @@ class HttpClient
     }
 
     // convert array of URIs to the format required by getAll()
-    // $requestSpecsOrUris: array of arrays in format
-    // {'uri' => uri to fetch, 'originalUri' => original URI which led to
-    // fetching this one}
-    // OR array of URIs (which get converted to this format)
     // 'originalUri' is used when fetching the alternate RDF representation of
     // an HTML page
     private function normaliseRequestSpecsOrUris($requestSpecsOrUris)
@@ -167,8 +185,13 @@ class HttpClient
         }, $requestSpecsOrUris);
     }
 
-    // perform an HTTP GET and return a LODResponse
-    // $uri: URI to fetch
+    /**
+     * Perform an HTTP GET and return a LODResponse.
+     *
+     * @param string $uri URI to fetch
+     *
+     * @return res\liblod\LODResponse
+     */
     public function get($uri)
     {
         $lodresponses = $this->getAll(array(
@@ -178,8 +201,16 @@ class HttpClient
         return $lodresponses[0];
     }
 
-    // see normaliseToRequestSpecs() for the format required for
-    // $requestSpecsOrUris
+    /**
+     * Get multiple URIs via HTTP GET.
+     *
+     * @param array $requestSpecsOrUris Array of arrays in format
+     * {'uri' => uri to fetch, 'originalUri' => original URI which led to
+     * fetching this one}
+     * OR array of URIs (which get converted to this format)
+     *
+     * @return array Array of LODResponse objects
+     */
     public function getAll($requestSpecsOrUris)
     {
         $requestSpecs = $this->normaliseRequestSpecsOrUris($requestSpecsOrUris);

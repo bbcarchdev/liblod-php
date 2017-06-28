@@ -21,8 +21,16 @@ namespace res\liblod;
 
 use res\liblod\LODTerm;
 
+/**
+ * An RDF URI.
+ */
 class LODResource extends LODTerm
 {
+    /**
+     * Check whether this is a resource. Always returns TRUE.
+     *
+     * @return bool
+     */
     public function isResource()
     {
         return TRUE;

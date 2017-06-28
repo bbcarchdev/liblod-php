@@ -19,26 +19,56 @@
 
 namespace res\liblod;
 
-/* A LODResponse is used by a context to encapsulate an HTTP response
- * that can be processed into the model by a LOD context. LODResponses
- * instances are created, processed, and destroyed as part of LOD::fetch()
- * automatically.
+/**
+ * A LODResponse is used by a LOD to encapsulate an HTTP response so
+ * that it can be processed into its index. LODResponses instances are created,
+ * processed, and destroyed automatically as part of LOD::fetch().
  */
 class LODResponse
 {
+    /**
+     * HTTP status of the response.
+     * @property int $status
+     */
     public $status = 0;
+
+    /**
+     * Error code for the response (typically 1 if an error occurred). If this
+     * is 0, no error occurred.
+     * @property int $error
+     */
     public $error = 0;
+
+    /**
+     * Error message for the response; if the error happened on the HTTP side
+     * (e.g. 500 error), this is typically the reason phrase from the HTTP
+     * response.
+     * @property string $errMsg
+     */
     public $errMsg = NULL;
 
-    // URI requested
+    /**
+     * The URI which was originally requested. If the response was redirected,
+     * this remains set to the original URI.
+     */
     public $target = NULL;
 
-    // content location
+    /**
+     * Content location, either from the 'Content-Location' header (if set)
+     * or the URI (if no 'Content-Location' is available).
+     * @property string $contentLocation
+     */
     public $contentLocation = NULL;
 
-    // content type, e.g. 'text/turtle' or 'application/rdf+xml'
+    /**
+     * Content type of the response, e.g. 'text/turtle', 'application/rdf+xml'
+     * @property string $type
+     */
     public $type = NULL;
 
-    // response body
+    /**
+     * Response body.
+     * @property string $payload
+     */
     public $payload = NULL;
 }

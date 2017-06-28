@@ -19,17 +19,36 @@
 
 namespace res\liblod;
 
+/**
+ * Abstract class for RDF terms (URIs and literals).
+ */
 abstract class LODTerm
 {
+    /**
+     * Value for the term.
+     * @property string $value
+     */
     public $value;
 
+    /**
+     * Constructor.
+     * @param string $value Sets the value for the term
+     */
     public function __construct($value)
     {
         $this->value = $value;
     }
 
+    /**
+     * Check whether this term is a resource or not.
+     * @return bool TRUE if term is a resource, FALSE otherwise.
+     */
     public abstract function isResource();
 
+    /**
+     * Get string representation of term.
+     * @return string
+     */
     public function __toString()
     {
         return $this->value;

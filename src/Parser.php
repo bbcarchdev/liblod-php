@@ -27,25 +27,38 @@ use pietercolpaert\hardf\N3Parser;
 use \EasyRdf_Parser_RdfXml;
 use \EasyRdf_Graph;
 
-/*
+/**
  * Wrapper round hardf and EasyRDF parsers
  * (hardf Turtle parser is much faster than EasyRDF but hardf doesn't have
- * an RDF/XML parser)
+ * an RDF/XML parser).
  */
 class Parser
 {
+    /**
+     * RDF helper
+     * @property res\liblod\Rdf $rdf
+     */
+    private $rdf;
+
+    /**
+     * Constructor.
+     * @param res\liblod\Rdf Sets RDF helper for this parser
+     */
     public function __construct($rdf=NULL)
     {
         $this->rdf = (empty($rdf) ? new Rdf() : $rdf);
     }
 
-    // $rdf is a string of RDF to parse
-    // $type is the mime type of the response being parsed; one of
-    // text/turtle, application/rdf+xml
-    //
-    // if $type is not a recognised content type, throws an exception
-    //
-    // returns array of LODStatement objects
+    /**
+     * Parse Turtle or RDF/XML into LODStatements.
+     *
+     * @param string $rdf RDF to parse
+     * @param string $type MIME type of the response being parsed; one of
+     * text/turtle, application/rdf+xml; if $type is not a recognised content
+     * type, throws an exception
+     *
+     * @return array Array of res\liblod\LODStatement objects
+     */
     public function parse($rdf, $type)
     {
         if(preg_match('|^text/turtle|', $type))

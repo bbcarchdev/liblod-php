@@ -91,22 +91,16 @@ class Rdf
      * Convert an EasyRdf_Graph into an array of triples.
      *
      * $graph EasyRdf_Graph
-     * $uri: if set, only return triples with $uri as a subject
      *
      * returns array of LODStatements
      */
-    public function getTriples($graph, $uri=NULL)
+    public function getTriples($graph)
     {
         $triples = array();
 
         // flatten out the PHP RDF produced by EasyRdf_Graph
         foreach($graph->toRdfPhp() as $subjectUri => $properties)
         {
-            if($uri && ($subjectUri !== $uri))
-            {
-                continue;
-            }
-
             foreach($properties as $propertyUri => $objects)
             {
                 // see LODStatement->__construct() for format of $object
@@ -124,8 +118,13 @@ class Rdf
         return $triples;
     }
 
-    // convert a LOD to RDF/Turtle
-    public function toTurtle($lodORlodinstance)
+    /**
+     * Convert a LOD or LODInstance to RDF/Turtle.
+     *
+     * for EasyRdf_Namespace::set()...
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     */
+    public function toTurtle($lodORlodinstance, $prefixes=Rdf::COMMON_PREFIXES)
     {
         $statements = NULL;
 
@@ -142,18 +141,16 @@ class Rdf
             $statements = $lodORlodinstance->model;
         }
 
-        if(empty($statements))
-        {
-            throw new ParseException('unable to convert object to Turtle');
-        }
-
         $rawNtriples = '';
         foreach($statements as $statement)
         {
             $rawNtriples .= "$statement .\n";
         }
 
-        $this->setNamespaces();
+        foreach($prefixes as $prefix => $fullUri)
+        {
+            EasyRdf_Namespace::set($prefix, $fullUri);
+        }
 
         $graph = new EasyRdf_Graph();
         $parser = new EasyRdf_Parser_Ntriples();
@@ -218,21 +215,4 @@ class Rdf
             'datatype' => $datatype
         );
     }
-
-    /**
-     * for EasyRdf_Namespace::set()
-     * @SuppressWarnings(PHPMD.StaticAccess)
-     */
-    public function setNamespaces($prefixes=Rdf::COMMON_PREFIXES)
-    {
-        foreach($prefixes as $prefix => $fullUri)
-        {
-            EasyRdf_Namespace::set($prefix, $fullUri);
-        }
-    }
 }
-
-/**
- * Exception raised when RDF can't be parsed
- */
-class ParseException extends Exception {}

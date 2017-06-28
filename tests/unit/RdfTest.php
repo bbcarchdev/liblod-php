@@ -18,8 +18,25 @@
  */
 
 use res\liblod\Rdf;
+use res\liblod\LOD;
 
 use PHPUnit\Framework\TestCase;
+
+const RDF_TURTLE = <<<TURTLE
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://res/people/william-blake#id>
+  a foaf:Person ;
+  rdfs:label "William Blake"@en-GB ;
+  dc:comment "William Blake, the person"@en-GB ;
+  owl:sameAs <http://dbpedia.org/resource/William_Blake> ;
+  void:inDataset <http://res/people#dataset> ;
+  foaf:primaryTopicOf <http://res/people/william-blake> .
+TURTLE;
 
 final class RdfTest extends TestCase
 {
@@ -64,5 +81,18 @@ final class RdfTest extends TestCase
         $expected = 'http://purl.org/dc/dcmitype/StillImage';
         $actual = $this->rdf->expandPrefix('dcmitype:StillImage');
         $this->assertEquals($expected, $actual);
+    }
+
+    public function testToTurtle()
+    {
+        $lod = new LOD();
+        $lod->loadRdf(RDF_TURTLE, 'text/turtle');
+
+        $lodturtle = $this->rdf->toTurtle($lod);
+
+        $lodinstance = $lod['http://res/people/william-blake#id'];
+        $lodinstanceturtle = $this->rdf->toTurtle($lodinstance);
+
+        $this->assertEquals($lodturtle, $lodinstanceturtle);
     }
 }

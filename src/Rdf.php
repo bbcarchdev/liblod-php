@@ -76,7 +76,7 @@ class Rdf
      *
      * @return string
      */
-    public function expandPrefix($uri, $prefixes=Rdf::COMMON_PREFIXES)
+    public function expandPrefix($uri, $prefixes = Rdf::COMMON_PREFIXES)
     {
         if(substr($uri, 0, 4) !== 'http')
         {
@@ -134,7 +134,7 @@ class Rdf
      * for EasyRdf_Namespace::set()...
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function toTurtle($lodORlodinstance, $prefixes=Rdf::COMMON_PREFIXES)
+    public function toTurtle($lodORlodinstance, $prefixes = Rdf::COMMON_PREFIXES)
     {
         $statements = NULL;
 
@@ -154,7 +154,7 @@ class Rdf
         $rawNtriples = '';
         foreach($statements as $statement)
         {
-            $rawNtriples .= "$statement .\n";
+            $rawNtriples .= $statement->__toString() . ".\n";
         }
 
         foreach($prefixes as $prefix => $fullUri)

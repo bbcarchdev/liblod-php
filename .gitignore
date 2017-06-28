@@ -1,5 +1,6 @@
 composer.lock
 cov
 apidocs
+style-report
 vendor
 **/.DS_Store

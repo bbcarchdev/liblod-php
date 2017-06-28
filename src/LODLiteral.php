@@ -48,7 +48,7 @@ class LODLiteral extends LODTerm
      * 'datatype' should be an expanded (not prefixed) URI for the datatype
      * of the literal.
      */
-    public function __construct($value, $spec=array())
+    public function __construct($value, $spec = array())
     {
         parent::__construct($value);
 

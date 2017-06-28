@@ -44,7 +44,7 @@ class Parser
      * Constructor.
      * @param res\liblod\Rdf Sets RDF helper for this parser
      */
-    public function __construct($rdf=NULL)
+    public function __construct($rdf = NULL)
     {
         $this->rdf = (empty($rdf) ? new Rdf() : $rdf);
     }
@@ -56,6 +56,8 @@ class Parser
      * @param string $type MIME type of the response being parsed; one of
      * text/turtle, application/rdf+xml; if $type is not a recognised content
      * type, throws an exception
+     *
+     * @throws Exception (if RDF can't be parsed)
      *
      * @return array Array of res\liblod\LODStatement objects
      */

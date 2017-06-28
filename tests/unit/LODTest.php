@@ -143,6 +143,31 @@ final class LODTest extends TestCase
         $this->assertEquals(1, count($lodinstance2->model));
     }
 
+    function testFetchAllBadResponse()
+    {
+        $fakeResponse1 = new LODResponse();
+        $fakeResponse1->payload = LOD_TURTLE;
+        $fakeResponse1->type = 'text/turtle';
+
+        $fakeResponse2 = new LODResponse();
+        $fakeResponse2->error = 1;
+
+        $fakeClient = new FakeHttpClient(
+            array(
+                'http://foo.bar/something' => $fakeResponse1,
+                'http://foo.bar/somethingelse' => $fakeResponse2
+            )
+        );
+
+        $lod = new LOD($fakeClient);
+        $result = $lod->fetchAll(
+            array('http://foo.bar/something', 'http://foo.bar/somethingelse')
+        );
+
+        // check each response has been processed
+        $this->assertFalse($result);
+    }
+
     function testFetchBadResponse()
     {
         $uri = 'http://foo.bar/something';
@@ -312,5 +337,12 @@ final class LODTest extends TestCase
         $lod->loadRdf(LOD_TURTLE, 'text/turtle');
         $lodinstance = $lod->resolve('http://foo.bar/something');
         $this->assertEquals(4, count($lodinstance->model));
+    }
+
+    function testLoadRdfBadTurtle()
+    {
+        $lod = new LOD();
+        $result = $lod->loadRdf('squirtle turtle', 'text/turtle');
+        $this->assertFalse($result);
     }
 }

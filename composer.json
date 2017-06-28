@@ -22,6 +22,7 @@
         "guzzlehttp/guzzle": "^6.2"
     },
     "require-dev": {
-        "phpmd/phpmd": "^2.6"
+        "phpmd/phpmd": "^2.6",
+        "phpcheckstyle/phpcheckstyle": "^0.14.6"
     }
 }

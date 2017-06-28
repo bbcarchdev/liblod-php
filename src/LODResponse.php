@@ -23,6 +23,10 @@ namespace res\liblod;
  * A LODResponse is used by a LOD to encapsulate an HTTP response so
  * that it can be processed into its index. LODResponses instances are created,
  * processed, and destroyed automatically as part of LOD::fetch().
+ *
+ * All properties are public and intended to be set directly, so remove
+ * phpcheckstyle warnings about them being unused.
+ * @SuppressWarnings checkUnusedVariables
  */
 class LODResponse
 {

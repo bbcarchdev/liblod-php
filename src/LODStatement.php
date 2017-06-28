@@ -61,7 +61,7 @@ class LODStatement
      * @param res\liblod\Rdf $rdf RDF helper
      */
     public function __construct($subj, $pred, $objOrSpec,
-    $prefixes=Rdf::COMMON_PREFIXES, $rdf=NULL)
+    $prefixes = Rdf::COMMON_PREFIXES, $rdf = NULL)
     {
         if(empty($rdf))
         {
@@ -89,19 +89,22 @@ class LODStatement
         // fallback: it's a spec for a literal or URI
         if(empty($obj))
         {
-          if($objOrSpec['type'] === 'literal')
-          {
-              if(isset($objOrSpec['datatype']))
-              {
-                  $objOrSpec['datatype'] =
-                      $rdf->expandPrefix($objOrSpec['datatype'], $prefixes);
-              }
-              $obj = new LODLiteral($objOrSpec['value'], $objOrSpec);
-          }
-          else if($objOrSpec['type'] === 'uri')
-          {
-              $obj = new LODResource($rdf->expandPrefix($objOrSpec['value'], $prefixes));
-          }
+            if($objOrSpec['type'] === 'literal')
+            {
+                if(isset($objOrSpec['datatype']))
+                {
+                    $datatype = $objOrSpec['datatype'];
+                    $datatypeUri = $rdf->expandPrefix($datatype, $prefixes);
+                    $objOrSpec['datatype'] = $datatypeUri;
+
+                }
+                $obj = new LODLiteral($objOrSpec['value'], $objOrSpec);
+            }
+            else if($objOrSpec['type'] === 'uri')
+            {
+                $uri = $rdf->expandPrefix($objOrSpec['value'], $prefixes);
+                $obj = new LODResource($uri);
+            }
         }
 
         $this->subject = $subj;
@@ -115,12 +118,13 @@ class LODStatement
      * @return string Examples:
      * <http://res/Frank> <http://www.w3.org/2000/01/rdf-schema#seeAlso> <http://res/Frankie>
      * <http://res/Frank> <http://www.w3.org/2000/01/rdf-schema#label> "Frank"@en-gb
-     * <http://res/Frank> <http://xmlns.com/foaf/0.1/age> "5"^^<http://www.w3.org/2001/XMLSchema#integer>
+     * <http://res/Frank> <http://xmlns.com/foaf/0.1/age>
+     *     "5"^^<http://www.w3.org/2001/XMLSchema#integer>
      */
     public function __toString()
     {
-        $str = '<' . $this->subject->__toString() . '> ' .
-               '<' . $this->predicate->__toString() . '> ';
+        $str = '<' . $this->subject->__toString() . '> ';
+        $str .= '<' . $this->predicate->__toString() . '> ';
 
         // uri
         if($this->object->isResource())

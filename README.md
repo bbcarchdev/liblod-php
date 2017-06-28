@@ -100,6 +100,24 @@ Rudimentary (incomplete) API docs can be generated with:
 php tools/phpDocumentor.phar -d src -t apidocs --template=responsive-twig
 ```
 
+The generated docs end up in the `apidocs/` directory.
+
+## Code style checking
+
+The code style can be checked with:
+
+```
+# short
+./build.sh style
+
+# full
+php vendor/phpcheckstyle/phpcheckstyle/run.php --src src/ --config phpcheckstyle-config.xml
+```
+
+The code style report ends up in the `style-report/` directory.
+
+(Note that the code style configuration is in the `checkstyle-config.xml` file.)
+
 ## Authors
 
 API design by [Mo McRoberts](https://github.com/nevali).
@@ -135,5 +153,6 @@ liblod-php depends on these libraries at runtime (which are licensed as stated):
 liblod-php depends on these libraries for development (which are licensed as stated):
 
 * [phpmd/phpmd](https://phpmd.org/) - [BSD 3-clause licence](https://github.com/phpmd/phpmd/blob/master/LICENSE)
+* [phpcheckstyle/phpcheckstyle](https://github.com/PHPCheckstyle/phpcheckstyle) - [Open Software Licence](https://github.com/PHPCheckstyle/phpcheckstyle/blob/master/LICENSE.txt)
 
 Note that neither the runtime nor development libraries are distributed with liblod-php.

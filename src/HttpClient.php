@@ -49,12 +49,6 @@ class HttpClient
      */
     public $accept = 'text/turtle;q=0.95, application/rdf+xml;q=0.5, text/html;q=0.1';
 
-    /**
-     * Maximum number of redirects to follow.
-     * @property int $maxRedirects
-     */
-    public $maxRedirects = 10;
-
     // Guzzle client
     private $client;
 
@@ -63,7 +57,7 @@ class HttpClient
      *
      * @param GuzzleHttp\Client $client
      */
-    public function __construct($client=NULL)
+    public function __construct($client = NULL)
     {
         if(empty($client))
         {
@@ -74,7 +68,7 @@ class HttpClient
     }
 
     // returns TRUE if $typeValue matches one of the values in self::RDF_TYPES
-    private function isRdfType($typeValue='')
+    private function _isRdfType($typeValue = '')
     {
         foreach(self::RDF_TYPES as $rdfType)
         {
@@ -87,7 +81,7 @@ class HttpClient
     }
 
     // make a LODResponse to encapsulate an error
-    private function makeErrorResponse($uri, $errorCode, $errMsg, $status=0)
+    private function _makeErrorResponse($uri, $errorCode, $errMsg, $status = 0)
     {
         $lodresponse = new LODResponse();
         $lodresponse->status = $status;
@@ -104,10 +98,10 @@ class HttpClient
      * @param string $html HTML to parse for an RDF link
      * @param string $uri URI used to make the <link rel="alternate"> href absolute.
      *
-     * for UriResolver::resolve()
+     * for UriResolver::resolve()...
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    private function getRdfLink($html, $uri)
+    private function _getRdfLink($html, $uri)
     {
         $location = NULL;
 
@@ -125,7 +119,7 @@ class HttpClient
                 $nodeType = $node->getAttribute('type');
                 $nodeRel = $node->getAttribute('rel');
 
-                if($nodeRel === 'alternate' && $this->isRdfType($nodeType))
+                if($nodeRel === 'alternate' && $this->_isRdfType($nodeType))
                 {
                     $location = $node->getAttribute('href');
                     break;
@@ -141,11 +135,11 @@ class HttpClient
             $location = UriResolver::resolve($base, $rel);
         }
 
-        return ($location === NULL ? NULL : "$location");
+        return ($location === NULL ? NULL : '' . $location);
     }
 
     // convert Guzzle response $rawResponse to LODResponse
-    private function convertResponse($uri, $rawResponse)
+    private function _convertResponse($uri, $rawResponse)
     {
         $status = $rawResponse->getStatusCode();
 
@@ -165,10 +159,14 @@ class HttpClient
     // convert array of URIs to the format required by getAll()
     // 'originalUri' is used when fetching the alternate RDF representation of
     // an HTML page
-    private function normaliseRequestSpecsOrUris($requestSpecsOrUris)
+    private function _normaliseRequestSpecsOrUris($requestSpecsOrUris)
     {
         // normalise the request specs or URIs so they can be processed
-        return array_map(function ($requestSpecOrUri) {
+        /**
+         * @SuppressWarnings docBlocks
+         */
+        $normaliseFn = function ($requestSpecOrUri)
+        {
             if(is_string($requestSpecOrUri))
             {
                 $requestSpecOrUri = array(
@@ -182,7 +180,15 @@ class HttpClient
             }
 
             return $requestSpecOrUri;
-        }, $requestSpecsOrUris);
+        };
+
+        /**
+         * for some reason, phpcheckstyle issues a warning about
+         * $requestSpecsOrUris being unused, when it definitely is, so ignore
+         * that
+         * @SuppressWarnings checkUnusedVariables
+         */
+        return array_map($normaliseFn, $requestSpecsOrUris);
     }
 
     /**
@@ -213,7 +219,7 @@ class HttpClient
      */
     public function getAll($requestSpecsOrUris)
     {
-        $requestSpecs = $this->normaliseRequestSpecsOrUris($requestSpecsOrUris);
+        $requestSpecs = $this->_normaliseRequestSpecsOrUris($requestSpecsOrUris);
 
         $headers = array(
             'Accept' => $this->accept,
@@ -245,19 +251,20 @@ class HttpClient
             // anything with the response, so add an error and return
             if(count($contentType) < 1)
             {
-                $lodresponses[$index] =
-                    $this->makeErrorResponse($uri, 1, 'no content type');
+                $msg = 'no content type';
+                $lodresponses[$index] = $this->_makeErrorResponse($uri, 1, $msg);
+
                 return;
             }
 
-            $isHtml = ($response->getStatusCode() === 200 &&
-                       preg_match('|text/html|', $contentType[0]));
+            $htmlContentType = preg_match('|text/html|', $contentType[0]);
+            $isHtml = ($htmlContentType && $response->getStatusCode() === 200);
 
             if($isHtml)
             {
                 // get <link> out of HTML page and fetch that instead
                 $html = $response->getBody()->getContents();
-                $location = $this->getRdfLink($html, $uri);
+                $location = $this->_getRdfLink($html, $uri);
 
                 if($location)
                 {
@@ -271,14 +278,14 @@ class HttpClient
 
                 // don't know what to do, so add an error
                 $errMsg = 'HTML page but no RDF link';
-                $lodresponses[$index] =
-                    $this->makeErrorResponse($uri, 1, $errMsg);
+                $errResponse = $this->_makeErrorResponse($uri, 1, $errMsg);
+                $lodresponses[$index] = $errResponse;
 
                 return;
             }
 
             // not HTML, so convert it to a LODResponse
-            $lodresponse = $this->convertResponse($originalUri, $response);
+            $lodresponse = $this->_convertResponse($originalUri, $response);
             $lodresponses[$index] = $lodresponse;
         };
 
@@ -286,7 +293,7 @@ class HttpClient
         $rejectedFn = function($reason, $index) use(&$lodresponses, $requestSpecs)
         {
             $uri = $requestSpecs[$index]['uri'];
-            $lodresponses[$index] = $this->makeErrorResponse($uri, 1, $reason);
+            $lodresponses[$index] = $this->_makeErrorResponse($uri, 1, $reason);
         };
 
         $options = array(

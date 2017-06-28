@@ -25,6 +25,7 @@ use res\liblod\Parser;
 use res\liblod\Rdf;
 
 use \ArrayAccess;
+use \Exception;
 
 /**
  * RDF context, containing merged RDF from all of the URIs resolved against it.
@@ -38,7 +39,7 @@ class LOD implements ArrayAccess
      * priority).
      * @property array $languages
      */
-    public $languages = array('en-gb', 'en');
+    private $languages = array('en-gb', 'en');
 
     /**
      * The most recently-fetched URI.
@@ -94,7 +95,7 @@ class LOD implements ArrayAccess
 
     // Process a LODResponse into the model; return the LODInstance, or FALSE
     // if the fetch failed
-    private function process(LODResponse $response)
+    private function _process(LODResponse $response)
     {
         $this->status = $response->status;
         $this->error = $response->error;
@@ -110,9 +111,7 @@ class LOD implements ArrayAccess
         $this->document = $response->contentLocation;
 
         // make a graph from the response
-        $this->loadRdf($response->payload, $response->type);
-
-        return TRUE;
+        return $this->loadRdf($response->payload, $response->type);
     }
 
     /**
@@ -122,7 +121,7 @@ class LOD implements ArrayAccess
      * @param res\liblod\Parser $parser
      * @param res\liblod\Rdf $rdf
      */
-    public function __construct($httpClient=NULL, $parser=NULL, $rdf=NULL)
+    public function __construct($httpClient = NULL, $parser = NULL, $rdf = NULL)
     {
         if(empty($httpClient))
         {
@@ -159,6 +158,9 @@ class LOD implements ArrayAccess
 
     /**
      * Resolve a LOD URI, potentially fetching data.
+     *
+     * @param string $uri URI to resolve
+     *
      * @return LODInstance|FALSE
      */
     public function resolve($uri)
@@ -174,6 +176,8 @@ class LOD implements ArrayAccess
     /**
      * Attempt to locate a subject within the index, but don't
      * try to fetch it if it's not present.
+     *
+     * @param string $uri URI to locate
      *
      * @return LODInstance|FALSE Returns FALSE if the URI doesn't exist in the
      * context.
@@ -198,12 +202,8 @@ class LOD implements ArrayAccess
     public function fetch($uri)
     {
         $response = $this->httpClient->get($uri);
-        if($response->error > 0)
-        {
-            return FALSE;
-        }
 
-        $result = $this->process($response);
+        $result = $this->_process($response);
         if(!$result)
         {
             return FALSE;
@@ -237,7 +237,7 @@ class LOD implements ArrayAccess
                 $success = FALSE;
             }
 
-            $result = $this->process($response);
+            $result = $this->_process($response);
             if(!$result)
             {
                 $success = FALSE;
@@ -252,11 +252,20 @@ class LOD implements ArrayAccess
      *
      * @param string $rdf RDF to load
      * @param string $type Sshould be 'text/turtle' or 'application/rdf+xml'
+     *
+     * @return bool FALSE if RDF could not be loaded, TRUE otherwise
      */
     public function loadRdf($rdf, $type)
     {
         // make a graph from the response
-        $triples = $this->parser->parse($rdf, $type);
+        try
+        {
+            $triples = $this->parser->parse($rdf, $type);
+        }
+        catch (Exception $e)
+        {
+            return FALSE;
+        }
 
         // add resources from the new graph to LODInstances in the index
         foreach($triples as $triple)
@@ -274,6 +283,8 @@ class LOD implements ArrayAccess
             $instance = $this->index[$subjectUri];
             $instance->add($triple);
         }
+
+        return TRUE;
     }
 
     /**
@@ -287,8 +298,8 @@ class LOD implements ArrayAccess
     public function getSameAs($uri)
     {
         // iterate all statements for the LOD instance, looking for those with
-        // subject === URI, predicate === owl:sameAs, object === object resource,
-        // and return an array of the URIs of the object resources
+        // subject === URI, predicate === owl:sameAs, object === object
+        // resource, and return an array of the URIs of the object resources
         $owlSameAsPred = $this->rdf->expandPrefix('owl:sameAs');
 
         $sameAsUris = array();
@@ -309,12 +320,30 @@ class LOD implements ArrayAccess
     }
 
     /* Property accessors */
+    /**
+     * Magic method for getting properties.
+     * @param string $name Name of property to get value for
+     * @return mixed Value of property
+     *
+     * for $this->{$name}...
+     * @SuppressWarnings controlCloseCurly
+     */
     public function __get($name)
     {
         $hasProperty = property_exists(get_class($this), $name);
         return ($hasProperty ? $this->{$name} : NULL);
     }
 
+    /**
+     * Magic method for setting properties.
+     * @param string $name Name of property to set value for
+     * @param mixed $value Value to set for property
+     *
+     * because we trigger_error(), we don't need break...
+     * @SuppressWarnings switchCaseNeedBreak
+     * for $this->{$name}...
+     * @SuppressWarnings controlCloseCurly
+     */
     public function __set($name, $value)
     {
         switch($name)
@@ -325,13 +354,19 @@ class LOD implements ArrayAccess
             case 'error':
             case 'errMsg':
             case 'index':
-                trigger_error("The LOD::$name property is read-only",
+                trigger_error('The LOD->' . $name . ' property is read-only',
                               E_USER_WARNING);
+            default:
+                $this->{$name} = $value;
         }
-        $this->{$name} = $value;
     }
 
     /**
+     * Unset a property.
+     * @param string $name Name of property to unset.
+     *
+     * because we trigger_error(), we don't need break...
+     * @SuppressWarnings switchCaseNeedBreak
      * @codeCoverageIgnore
      */
     public function __unset($name)
@@ -344,13 +379,18 @@ class LOD implements ArrayAccess
             case 'error':
             case 'errMsg':
             case 'index':
-                trigger_error("The LOD::$name property is read-only",
+                trigger_error('The LOD->' . $name . ' property is read-only',
                               E_USER_WARNING);
+            default:
+                unset($this->{$name});
         }
-        unset($this->{$name});
     }
 
     /**
+     * Check whether a property is set.
+     * @param string $name Name of property to check
+     * @return bool
+     *
      * @codeCoverageIgnore
      */
     public function __isset($name)
@@ -362,32 +402,46 @@ class LOD implements ArrayAccess
 // ArrayAccess implementation
 trait LODArrayAccess
 {
-    public function offsetGet($name)
+    /**
+     * For array access; passes control to res\liblod\LOD->resolve().
+     * @param string $uri URI of LODInstance to get.
+     * @return LODInstance|FALSE
+     */
+    public function offsetGet($uri)
     {
-        return $this->resolve($name);
+        return $this->resolve($uri);
     }
 
-    public function offsetExists($name)
+    /**
+     * Check whether a LODInstance exists for a specific URI.
+     * @param string $uri URI of LODInstance to test for.
+     * @return bool
+     */
+    public function offsetExists($uri)
     {
-        $inst = $this->offsetGet($name);
+        $inst = $this->offsetGet($uri);
         return (is_object($inst) && $inst->exists);
     }
 
     /**
      * @codeCoverageIgnore
+     * @SuppressWarnings docBlocks
+     * @SuppressWarnings checkUnusedFunctionParameters
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function offsetSet($offset, $value)
     {
-        trigger_error("LOD array members are read-only", E_USER_NOTICE);
+        trigger_error('LOD array members are read-only', E_USER_NOTICE);
     }
 
     /**
      * @codeCoverageIgnore
+     * @SuppressWarnings docBlocks
+     * @SuppressWarnings checkUnusedFunctionParameters
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function offsetUnset($offset)
     {
-        trigger_error("LOD array members are read-only", E_USER_NOTICE);
+        trigger_error('LOD array members are read-only', E_USER_NOTICE);
     }
 }

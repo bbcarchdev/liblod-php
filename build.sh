@@ -15,40 +15,72 @@
 # limitations under the License.
 
 # script to make it a bit easier to run tests etc.
+function unit() {
+  echo "Running unit test suite"
+  php tools/phpunit.phar --bootstrap vendor/autoload.php tests/unit
+}
+
+function int() {
+  echo "Running integration test suite"
+  php tools/phpunit.phar --bootstrap vendor/autoload.php tests/integration
+}
+
+function cov() {
+  echo "Running unit test suite with code coverage reporting"
+  php tools/phpunit.phar --bootstrap vendor/autoload.php --whitelist src --coverage-html cov tests/unit
+  echo "Coverage report generated; see cov/index.html"
+}
+
+function mess() {
+  echo "Running code quality analysis with PHPMD"
+  result=`php vendor/bin/phpmd src text cleancode,codesize,design,naming,unusedcode`
+  echo
+  if [ "x" = "x$result" ] ; then
+    echo "*** No code quality problems found"
+  else
+    echo "!!! Problems found:"
+    echo $result
+  fi
+}
+
+function style() {
+  echo "Checking code style using phpcheckstyle"
+  rm -Rf style-report
+  php vendor/phpcheckstyle/phpcheckstyle/run.php --src src/ --config phpcheckstyle-config.xml
+  echo "Code style report generated; see style-report/index.html"
+}
+
+function docs() {
+  echo "Generating API documentation in apidocs/ using phpDocumentor"
+  rm -Rf apidocs/
+  php tools/phpDocumentor.phar -d src -t apidocs --template=responsive-twig
+  echo "API documentation generated in apidocs/ directory"
+}
+
 case "$1" in
   install)
     echo "Installing dependencies"
     php tools/composer.phar install
   ;;
   unit)
-    echo "Running unit test suite"
-    php tools/phpunit.phar --bootstrap vendor/autoload.php tests/unit
+    unit
   ;;
   int)
-    echo "Running integration test suite"
-    php tools/phpunit.phar --bootstrap vendor/autoload.php tests/integration
+    int
   ;;
   cov)
-    echo "Running unit test suite with code coverage reporting; see cov/index.html"
-    php tools/phpunit.phar --bootstrap vendor/autoload.php --whitelist src --coverage-html cov tests/unit
+    cov
   ;;
   mess)
-    echo "Running code quality analysis with PHPMD"
-    result=`php vendor/bin/phpmd src text cleancode,codesize,design,naming,unusedcode`
-    echo
-    if [ "x" = "x$result" ] ; then
-      echo "*** No code quality problems found"
-    else
-      echo "!!! Problems found:"
-      echo $result
-    fi
+    mess
+  ;;
+  style)
+    style
   ;;
   docs)
-    echo "Generating API documentation in apidocs/"
-    rm -Rf apidocs/
-    php tools/phpDocumentor.phar -d src -t apidocs --template=responsive-twig
+    docs
   ;;
   *)
-    echo "./build.sh install|unit|int|cov|mess"
+    echo "./build.sh install|unit|int|cov|mess|style"
   ;;
 esac

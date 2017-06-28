@@ -78,7 +78,7 @@ class LODInstance implements ArrayAccess, Iterator
      * subject URI.
      * @param res\liblod\Rdf $rdf RDF helper
      */
-    public function __construct(LOD $context, $uri, $model=array(), $rdf=NULL)
+    public function __construct(LOD $context, $uri, $model = array(), $rdf = NULL)
     {
         if(empty($rdf))
         {
@@ -91,6 +91,14 @@ class LODInstance implements ArrayAccess, Iterator
         $this->rdf = $rdf;
     }
 
+    /**
+     * Magic method getter.
+     * @param string $name Name of property to get value for
+     * @return mixed Value of property
+     *
+     * switch statement doesn't need breaks here as it immediately returns
+     * @SuppressWarnings switchCaseNeedBreak
+     */
     public function __get($name)
     {
         switch($name)
@@ -101,10 +109,20 @@ class LODInstance implements ArrayAccess, Iterator
                 return $this->model;
             case 'exists':
                 return $this->exists();
+            default:
+                return NULL;
         }
-        return NULL;
     }
 
+    /**
+     * Magic method setter.
+     * @param string $name Name of property to set
+     * @param mixed $value Value for property
+     *
+     * because we trigger_error(), we don't need break...
+     * @SuppressWarnings switchCaseNeedBreak
+     * @SuppressWarnings controlCloseCurly
+     */
     public function __set($name, $value)
     {
         switch($name)
@@ -112,9 +130,11 @@ class LODInstance implements ArrayAccess, Iterator
             case 'uri':
             case 'model':
             case 'exists':
-                trigger_error("The LODInstance::$name property is read-only", E_USER_WARNING);
+                $msg = 'The LODInstance->' . $name . ' property is read-only';
+                trigger_error($msg, E_USER_WARNING);
+            default:
+                $this->{$name} = $value;
         }
-        $this->{$name} = $value;
     }
 
     /**
@@ -212,6 +232,9 @@ class LODInstance implements ArrayAccess, Iterator
         $languages = $this->context->languages;
 
         // get triples which match the query
+        /**
+         * @SuppressWarnings docBlocks
+         */
         $filterFn = function($item) use($predicates, $languages)
         {
             $predicateMatches = in_array($item->predicate->value, $predicates);
@@ -231,21 +254,24 @@ class LODInstance implements ArrayAccess, Iterator
 
         // sort the results depending on the language of the object literals
         // so statements in our most-preferred language are first
+        /**
+         * @SuppressWarnings docBlocks
+         */
         $sortFn = function ($item1, $item2) use($languages)
         {
             // if an item isn't a literal, it doesn't have a language,
             // so it can't be assigned a rank
-            $item1Rank = (
-                $item1->object->isResource() ?
-                    FALSE :
-                    array_search($item1->object->language, $languages)
-            );
+            $item1Rank = FALSE;
+            if(!$item1->object->isResource())
+            {
+                $item1Rank = array_search($item1->object->language, $languages);
+            }
 
-            $item2Rank = (
-                $item2->object->isResource() ?
-                    FALSE :
-                    array_search($item2->object->language, $languages)
-            );
+            $item2Rank = FALSE;
+            if(!$item2->object->isResource())
+            {
+                $item2Rank = array_search($item2->object->language, $languages);
+            }
 
             $lowestRank = count($languages);
 
@@ -316,7 +342,6 @@ trait LODInstanceIterator
 {
     /**
      * Get the statement at the current iterator position.
-     *
      * @return LODStatement The full LODStatement at this position in the model
      */
     public function current()
@@ -324,21 +349,35 @@ trait LODInstanceIterator
         return $this->model[$this->position];
     }
 
+    /**
+     * Return the current position.
+     * @return int Current position of the iterator
+     */
     public function key()
     {
         return $this->position;
     }
 
+    /**
+     * Increment the current iterator position.
+     */
     public function next()
     {
         ++$this->position;
     }
 
+    /**
+     * Rewind the iterator to its first position.
+     */
     public function rewind()
     {
         $this->position = 0;
     }
 
+    /**
+     * Check whether the value at the current position is set.
+     * @return bool TRUE if position is valid
+     */
     public function valid()
     {
         return isset($this->model[$this->position]);
@@ -353,6 +392,9 @@ trait LODInstanceArrayAccess
      * mean that the query returns a LODInstance with at least one matching
      * LODStatement in its model.
      *
+     * @param string $query See res\liblod\LODInstance->query() for details of
+     * the syntax.
+     *
      * @return bool
      */
     public function offsetExists($query)
@@ -361,26 +403,41 @@ trait LODInstanceArrayAccess
         return count($instance->model) > 0;
     }
 
+    /**
+     * Get a LODInstance whose statements satisfy a query.
+     *
+     * @param string $query See res\liblod\LODInstance->query() for details of
+     * the syntax.
+     *
+     * @return LODInstance Get the LODInstance formed by applying $query to
+     * the current LODInstance.
+     */
     public function offsetGet($query)
     {
         return $this->filter($query);
     }
 
     /**
+     * Trigger an error if an attempt is made to set a value at an offset.
      * @codeCoverageIgnore
+     * @SuppressWarnings checkUnusedFunctionParameters
+     * @SuppressWarnings docBlocks
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function offsetSet($offset, $value)
     {
-        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
+        trigger_error('LODInstance array members are read-only', E_USER_NOTICE);
     }
 
     /**
+     * Trigger an error if an attempt is made to unset a value at an offset.
      * @codeCoverageIgnore
+     * @SuppressWarnings checkUnusedFunctionParameters
+     * @SuppressWarnings docBlocks
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function offsetUnset($offset)
     {
-        trigger_error("LODInstance array members are read-only", E_USER_NOTICE);
+        trigger_error('LODInstance array members are read-only', E_USER_NOTICE);
     }
 }

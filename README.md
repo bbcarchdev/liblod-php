@@ -1,4 +1,4 @@
-# res/liblod
+# liblod-php
 
 A Linked Open Data library for PHP, developed as part of the
 [RES project](http://res.space/).
@@ -21,11 +21,11 @@ composer require res/liblod
 
 ## Usage
 
-See `res_liblod_usage.md` (in this directory).
+See `liblod-php_usage.md` (in this directory).
 
 ## Developing the code
 
-To develop res/liblod, you'll need to install the dependencies. You can do this
+To develop liblod-php, you'll need to install the dependencies. You can do this
 with:
 
 ```
@@ -42,9 +42,7 @@ To run the unit tests:
 
 ```
 # shortcut
-./build.sh test-unit
-OR
-./build.sh
+./build.sh unit
 
 # full
 php tools/phpunit.phar --bootstrap vendor/autoload.php tests/unit
@@ -54,7 +52,7 @@ To run the integration tests:
 
 ```
 # shortcut
-./build.sh test-int
+./build.sh int
 
 # full
 php tools/phpunit.phar --bootstrap vendor/autoload.php tests/integration
@@ -104,15 +102,15 @@ Implementation by [Elliot Smith](https://github.com/townxelliot).
 
 Copyright © 2017 BBC
 
-res/liblod is licensed under the terms of the Apache License, Version 2.0
+liblod-php is licensed under the terms of the Apache License, Version 2.0
 (see LICENCE-APACHE.txt).
 
-The res/liblod code base distributes the following software:
+The liblod-php code base distributes the following software:
 
 * [PHPUnit](http://phpunit.de/): distributed under the [3-clause BSD licence](https://opensource.org/licenses/BSD-3-Clause). See `tools/LICENCE-PHPUNIT-BSD3.txt` for the full licence.
 * [Composer](http://getcomposer.org/): distributed under the [MIT licence](https://opensource.org/licenses/MIT). See `tools/LICENCE-COMPOSER-MIT.txt` for the full licence.
 
-res/liblod depends on these libraries (which are licensed as stated):
+liblod-php depends on these libraries (which are licensed as stated):
 
 * [pietercolpaert/hardf](https://github.com/pietercolpaert/hardf) - [MIT licence](https://github.com/pietercolpaert/hardf/blob/master/LICENSE)
 * [easyrdf/easyrdf](http://easyrdf.org/) - [BSD 3-clause licence](https://github.com/njh/easyrdf/blob/master/LICENSE.md)
@@ -120,4 +118,4 @@ res/liblod depends on these libraries (which are licensed as stated):
 * [guzzlehttp/guzzle](http://guzzlephp.org/) - [MIT licence](https://github.com/guzzle/guzzle/blob/master/LICENSE)
 * [phpmd/phpmd](https://phpmd.org/) - [BSD 3-clause licence](https://github.com/phpmd/phpmd/blob/master/LICENSE)
 
-Note that these libraries are not distributed with res/liblod.
+Note that these libraries are not distributed with liblod-php.

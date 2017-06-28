@@ -20,7 +20,11 @@ case "$1" in
     echo "Installing dependencies"
     php tools/composer.phar install
   ;;
-  test-int)
+  unit)
+    echo "Running unit test suite"
+    php tools/phpunit.phar --bootstrap vendor/autoload.php tests/unit
+  ;;
+  int)
     echo "Running integration test suite"
     php tools/phpunit.phar --bootstrap vendor/autoload.php tests/integration
   ;;
@@ -29,10 +33,17 @@ case "$1" in
     php tools/phpunit.phar --bootstrap vendor/autoload.php --whitelist src --coverage-html cov tests/unit
   ;;
   mess)
-    php vendor/bin/phpmd src text cleancode,codesize,design,naming,unusedcode
+    echo "Running code quality analysis with PHPMD"
+    result=`php vendor/bin/phpmd src text cleancode,codesize,design,naming,unusedcode`
+    echo
+    if [ "x" = "x$result" ] ; then
+      echo "*** No code quality problems found"
+    else
+      echo "!!! Problems found:"
+      echo $result
+    fi
   ;;
   *)
-    echo "Running unit test suite"
-    php tools/phpunit.phar --bootstrap vendor/autoload.php tests/unit
+    echo "./build.sh install|unit|int|cov|mess"
   ;;
 esac

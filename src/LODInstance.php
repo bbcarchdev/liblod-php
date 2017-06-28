@@ -310,6 +310,7 @@ trait LODInstanceArrayAccess
     }
 
     /**
+     * @codeCoverageIgnore
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function offsetSet($offset, $value)
@@ -318,6 +319,7 @@ trait LODInstanceArrayAccess
     }
 
     /**
+     * @codeCoverageIgnore
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function offsetUnset($offset)

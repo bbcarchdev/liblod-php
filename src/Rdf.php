@@ -19,6 +19,8 @@
 
 namespace res\liblod;
 
+use \Exception;
+
 use EasyRdf_Graph;
 use EasyRdf_Parser_Ntriples;
 use EasyRdf_Serialiser_Turtle;
@@ -142,7 +144,7 @@ class Rdf
 
         if(empty($statements))
         {
-            trigger_error('unable to convert object to Turtle', E_USER_ERROR);
+            throw new ParseException('unable to convert object to Turtle');
         }
 
         $rawNtriples = '';
@@ -229,3 +231,8 @@ class Rdf
         }
     }
 }
+
+/**
+ * Exception raised when RDF can't be parsed
+ */
+class ParseException extends Exception {}

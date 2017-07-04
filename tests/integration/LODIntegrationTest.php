@@ -110,9 +110,6 @@ final class LODIntegrationTest extends TestCase
                 $uri . ') but one was about ' . $triple->subject->value
             );
         }
-
-        $this->assertEquals(87, count($triples),
-                            "should be 87 triples for $uri");
     }
 
     function testContentLocation()
@@ -224,7 +221,9 @@ final class LODIntegrationTest extends TestCase
         // test that redirects (as used by DBPedia) are followed correctly
         $lod = new LOD();
         $instance = $lod->resolve('http://dbpedia.org/resource/Oxford');
-        $this->assertEquals(190, count($instance->model));
+        $this->assertEquals('http://dbpedia.org/data/Oxford.ttl',
+                            $lod->document,
+                            'should store final redirect location as document');
     }
 }
 ?>

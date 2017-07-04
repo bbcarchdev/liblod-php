@@ -23,6 +23,7 @@
     },
     "require-dev": {
         "phpmd/phpmd": "^2.6",
-        "phpcheckstyle/phpcheckstyle": "^0.14.6"
+        "phpcheckstyle/phpcheckstyle": "^0.14.6",
+        "consolidation/robo": "^1.1"
     }
 }

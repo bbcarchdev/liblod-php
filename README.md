@@ -5,19 +5,19 @@ A Linked Open Data library for PHP, developed as part of the
 
 **Note that this is experimental code which is still under development.**
 
-The `build.sh` script provides shortcuts for the commands shown below, but
-is only tested on Mac and Linux. If you're working on Windows, you'll need the
-commands below in full.
-
 ## Requirements
 
 PHP 5.6 or higher (it works under PHP 7, but no features from PHP 7 are used).
 
 ## Installation
 
+To install this library for use with your own code, do:
+
 ```
 composer require res/liblod
 ```
+
+???TODO
 
 ## Usage
 
@@ -29,10 +29,6 @@ To develop liblod-php, you'll need to install the dependencies. You can do this
 with:
 
 ```
-# shortcut
-./build.sh install
-
-# full
 php tools/composer.phar install
 ```
 
@@ -41,49 +37,33 @@ php tools/composer.phar install
 To run the unit tests:
 
 ```
-# shortcut
-./build.sh unit
-
-# full
-php tools/phpunit.phar --bootstrap vendor/autoload.php tests/unit
+./vendor/bin/robo unit
 ```
 
 To run the integration tests:
 
 ```
-# shortcut
-./build.sh int
-
-# full
-php tools/phpunit.phar --bootstrap vendor/autoload.php tests/integration
+./vendor/bin/robo int
 ```
 
-**Note that the integration tests work against the live [Acropolis stack](http://acropolis.org.uk/) and other LOD sites, so you will need a network connection to run them. They can also be somewhat fragile, as the number of statements for Acropolis resources may periodically change, depending on what's being ingested. This can occasionally cause test failures.**
+**Note that the integration tests work against the live [Acropolis stack](http://acropolis.org.uk/) and other LOD sites, so you will need a network connection to run them. They can also be somewhat fragile, as the number of statements for Acropolis resources may periodically change, depending on what has been ingested. This can occasionally cause test failures.**
 
 ## Code coverage
 
-To generate a code coverage report for the tests, you will need to [install XDebug](https://xdebug.org/docs/install). Then, run:
+To generate a code coverage report for the tests, you will first need to [install the XDebug PHP module](https://xdebug.org/docs/install). Then, run:
 
 ```
-# shortcut
-./build.sh cov
-
-# full
-php tools/phpunit.phar --bootstrap vendor/autoload.php --coverage-html cov --whitelist src tests/integration
+./vendor/bin/robo cov
 ```
 
-The report can be viewed by opening `cov/index.html` in a web browser.
+The report can be viewed by opening `build/cov/index.html` in a web browser.
 
 ## Code quality
 
 Code quality checks can be run with:
 
 ```
-# shortcut
-./build.sh mess
-
-# full
-php vendor/bin/phpmd src text cleancode,codesize,design,naming,unusedcode
+./vendor/bin/robo mess
 ```
 
 This uses [PHPMD](https://phpmd.org/) to report on various issues with the code.
@@ -93,30 +73,22 @@ This uses [PHPMD](https://phpmd.org/) to report on various issues with the code.
 Rudimentary (incomplete) API docs can be generated with:
 
 ```
-# shortcut
-./build.sh docs
-
-# full
-php tools/phpDocumentor.phar -d src -t apidocs --template=responsive-twig
+./vendor/bin/robo docs
 ```
 
-The generated docs end up in the `apidocs/` directory.
+The generated docs end up in the `build/apidocs/` directory.
 
 ## Code style checking
 
 The code style can be checked with:
 
 ```
-# short
-./build.sh style
-
-# full
-php vendor/phpcheckstyle/phpcheckstyle/run.php --src src/ --config phpcheckstyle-config.xml
+./vendor/bin/robo style
 ```
 
-The code style report ends up in the `style-report/` directory.
+The code style report ends up in the `build/style/` directory.
 
-(Note that the code style configuration is in the `checkstyle-config.xml` file.)
+(Note that the code style configuration is in the `phpcheckstyle-config.xml` file.)
 
 ## Authors
 
@@ -126,7 +98,7 @@ Implementation by [Elliot Smith](https://github.com/townxelliot).
 
 ## Contributing
 
-???
+???TODO
 
 ## Licence
 
@@ -152,6 +124,7 @@ liblod-php depends on these libraries at runtime (which are licensed as stated):
 
 liblod-php depends on these libraries for development (which are licensed as stated):
 
+* [consolidation/robo](https://github.com/consolidation/robo) - [MIT licence](https://github.com/consolidation/Robo/blob/master/LICENSE)
 * [phpmd/phpmd](https://phpmd.org/) - [BSD 3-clause licence](https://github.com/phpmd/phpmd/blob/master/LICENSE)
 * [phpcheckstyle/phpcheckstyle](https://github.com/PHPCheckstyle/phpcheckstyle) - [Open Software Licence](https://github.com/PHPCheckstyle/phpcheckstyle/blob/master/LICENSE.txt)
 

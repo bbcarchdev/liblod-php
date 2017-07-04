@@ -1,6 +1,4 @@
 composer.lock
-cov
-apidocs
-style-report
+build
 vendor
 **/.DS_Store

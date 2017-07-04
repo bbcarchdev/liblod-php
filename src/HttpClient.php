@@ -26,6 +26,7 @@ use \GuzzleHttp\Psr7\Uri;
 use \GuzzleHttp\Psr7\Request;
 use \GuzzleHttp\Pool;
 use \GuzzleHttp\Client as GuzzleClient;
+use \GuzzleHttp\RequestOptions;
 use \GuzzleHttp\Exception\ClientException;
 use \DOMDocument;
 
@@ -61,7 +62,12 @@ class HttpClient
     {
         if(empty($client))
         {
-            $client = new GuzzleClient();
+            $client = new GuzzleClient(array(
+                RequestOptions::ALLOW_REDIRECTS => array(
+                    'max' => 10,
+                    'track_redirects' => true
+                )
+            ));
         }
 
         $this->client = $client;
@@ -151,7 +157,16 @@ class HttpClient
         $response->type = $rawResponse->getHeader('Content-Type')[0];
 
         $contentLocation = $rawResponse->getHeader('Content-Location');
-        $response->contentLocation = ($contentLocation ? $contentLocation[0] : $uri);
+        if($contentLocation)
+        {
+            $response->contentLocation = $contentLocation[0];
+        }
+        else
+        {
+            $guzzleHeader = 'X-Guzzle-Redirect-History';
+            $redirectUriHistory = $rawResponse->getHeader($guzzleHeader);
+            $response->contentLocation = end($redirectUriHistory);
+        }
 
         return $response;
     }

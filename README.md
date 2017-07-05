@@ -1,6 +1,6 @@
 # liblod-php
 
-A Linked Open Data library for PHP, developed as part of the
+A Linked Open Data client library for PHP, developed as part of the
 [RES project](http://res.space/).
 
 **Note that this is experimental code which is still under development.**
@@ -46,7 +46,7 @@ To run the integration tests:
 ./vendor/bin/robo int
 ```
 
-**Note that the integration tests work against the live [Acropolis stack](http://acropolis.org.uk/) and other LOD sites, so you will need a network connection to run them. They can also be somewhat fragile, as the number of statements for Acropolis resources may periodically change, depending on what has been ingested. This can occasionally cause test failures.**
+**Note that the integration tests work against the live [Acropolis stack](http://acropolis.org.uk/) and other LOD sites, so you will need a network connection to run them. They can also be somewhat fragile, as the number of statements for fetched resources may periodically change, depending on what has been ingested. This can occasionally cause test failures.**
 
 ## Code coverage
 
@@ -102,7 +102,7 @@ Implementation by [Elliot Smith](https://github.com/townxelliot).
 
 ## Licence
 
-Copyright © 2017 BBC
+Elliot Smith, © BBC 2017
 
 liblod-php is licensed under the terms of the Apache License, Version 2.0
 (see LICENCE-APACHE.txt).
@@ -115,17 +115,15 @@ The liblod-php code base distributes the following software (used during develop
 
 (NB these libraries are distributed with the source because they cause version clashes with dependencies used by the runtime library or are inconvenient to install.)
 
-liblod-php depends on these libraries at runtime (which are licensed as stated):
+liblod-php depends on these libraries at runtime (which are licensed as stated); these are not distributed with liblod-php:
 
 * [pietercolpaert/hardf](https://github.com/pietercolpaert/hardf) - [MIT licence](https://github.com/pietercolpaert/hardf/blob/master/LICENSE)
 * [easyrdf/easyrdf](http://easyrdf.org/) - [BSD 3-clause licence](https://github.com/njh/easyrdf/blob/master/LICENSE.md)
 * [guzzlehttp/psr7](http://guzzlephp.org/) - [MIT licence](https://github.com/guzzle/guzzle/blob/master/LICENSE)
 * [guzzlehttp/guzzle](http://guzzlephp.org/) - [MIT licence](https://github.com/guzzle/guzzle/blob/master/LICENSE)
 
-liblod-php depends on these libraries for development (which are licensed as stated):
+liblod-php depends on these libraries for development (which are licensed as stated); these are not distributed with liblod-php:
 
 * [consolidation/robo](https://github.com/consolidation/robo) - [MIT licence](https://github.com/consolidation/Robo/blob/master/LICENSE)
 * [phpmd/phpmd](https://phpmd.org/) - [BSD 3-clause licence](https://github.com/phpmd/phpmd/blob/master/LICENSE)
 * [phpcheckstyle/phpcheckstyle](https://github.com/PHPCheckstyle/phpcheckstyle) - [Open Software Licence](https://github.com/PHPCheckstyle/phpcheckstyle/blob/master/LICENSE.txt)
-
-Note that neither the runtime nor development libraries are distributed with liblod-php.

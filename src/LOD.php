@@ -93,8 +93,8 @@ class LOD implements ArrayAccess
     // RDF helper
     private $rdf;
 
-    // Process a LODResponse into the model; return the LODInstance, or FALSE
-    // if the fetch failed
+    // Process a LODResponse into the model; return TRUE if it could be
+    // processed and loaded, or FALSE if the fetch failed
     private function _process(LODResponse $response)
     {
         $this->status = $response->status;

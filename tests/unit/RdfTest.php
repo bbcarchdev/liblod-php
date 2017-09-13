@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-use res\liblod\Rdf;
-use res\liblod\LOD;
+use bbcarchdev\liblod\Rdf;
+use bbcarchdev\liblod\LOD;
 
 use PHPUnit\Framework\TestCase;
 

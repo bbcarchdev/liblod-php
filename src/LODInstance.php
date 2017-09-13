@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 
-namespace res\liblod;
+namespace bbcarchdev\liblod;
 
-use res\liblod\LOD;
-use res\liblod\Rdf;
-use res\liblod\LODResponse;
+use bbcarchdev\liblod\LOD;
+use bbcarchdev\liblod\Rdf;
+use bbcarchdev\liblod\LODResponse;
 
 use \ArrayAccess;
 use \Iterator;
@@ -52,7 +52,7 @@ class LODInstance implements ArrayAccess, Iterator
     protected $uri;
 
     /**
-     * Array of res\liblod\LODStatement objects
+     * Array of bbcarchdev\liblod\LODStatement objects
      * @property array $model
      */
     protected $model;
@@ -61,7 +61,7 @@ class LODInstance implements ArrayAccess, Iterator
     // can access it
     protected $position = 0;
 
-    // res\liblod\RDF helper
+    // bbcarchdev\liblod\RDF helper
     private $rdf;
 
     // Generated keys of statements in the model (used to prevent
@@ -71,12 +71,12 @@ class LODInstance implements ArrayAccess, Iterator
     /**
      * Constructor.
      *
-     * @param res\liblod\LOD $context
+     * @param bbcarchdev\liblod\LOD $context
      * @param string $uri
-     * @param array $model Array of res\liblod\LODStatement objects belonging
+     * @param array $model Array of bbcarchdev\liblod\LODStatement objects belonging
      * to this instance; all of these statements should have the same
      * subject URI.
-     * @param res\liblod\Rdf $rdf RDF helper
+     * @param bbcarchdev\liblod\Rdf $rdf RDF helper
      */
     public function __construct(LOD $context, $uri, $model = array(), $rdf = NULL)
     {
@@ -141,7 +141,7 @@ class LODInstance implements ArrayAccess, Iterator
      * Add a LODStatement, but only if the same subject+predicate+object isn't
      * already in the model.
      *
-     * @param res\liblod\LODStatement $statement
+     * @param bbcarchdev\liblod\LODStatement $statement
      */
     public function add($statement)
     {
@@ -215,7 +215,7 @@ class LODInstance implements ArrayAccess, Iterator
      *
      * @param string $query Predicates to query for; see description for syntax.
      *
-     * @return res\liblod\FilteredLODInstance An instance containing matching
+     * @return bbcarchdev\liblod\FilteredLODInstance An instance containing matching
      * triples.
      */
     public function filter($query)
@@ -392,7 +392,7 @@ trait LODInstanceArrayAccess
      * mean that the query returns a LODInstance with at least one matching
      * LODStatement in its model.
      *
-     * @param string $query See res\liblod\LODInstance->query() for details of
+     * @param string $query See bbcarchdev\liblod\LODInstance->query() for details of
      * the syntax.
      *
      * @return bool
@@ -406,7 +406,7 @@ trait LODInstanceArrayAccess
     /**
      * Get a LODInstance whose statements satisfy a query.
      *
-     * @param string $query See res\liblod\LODInstance->query() for details of
+     * @param string $query See bbcarchdev\liblod\LODInstance->query() for details of
      * the syntax.
      *
      * @return LODInstance Get the LODInstance formed by applying $query to

@@ -7,10 +7,10 @@ Full code samples can be found in the `examples` directory inside this project.
 
 ## LOD: wrapper for an RDF graph
 
-The main entrypoint to using res/liblod is through the `LOD` class.
+The main entrypoint to using bbcarchdev/liblod is through the `LOD` class.
 
 ```
-use res\liblod\LOD;
+use bbcarchdev\liblod\LOD;
 
 $lod = new LOD();
 ```

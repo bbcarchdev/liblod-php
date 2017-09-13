@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 
-namespace res\liblod;
+namespace bbcarchdev\liblod;
 
-use res\liblod\Rdf;
-use res\liblod\LODResource;
-use res\liblod\LODStatement;
+use bbcarchdev\liblod\Rdf;
+use bbcarchdev\liblod\LODResource;
+use bbcarchdev\liblod\LODStatement;
 
 use pietercolpaert\hardf\N3Parser;
 use \EasyRdf_Parser_RdfXml;
@@ -36,13 +36,13 @@ class Parser
 {
     /**
      * RDF helper
-     * @property res\liblod\Rdf $rdf
+     * @property bbcarchdev\liblod\Rdf $rdf
      */
     private $rdf;
 
     /**
      * Constructor.
-     * @param res\liblod\Rdf Sets RDF helper for this parser
+     * @param bbcarchdev\liblod\Rdf Sets RDF helper for this parser
      */
     public function __construct($rdf = NULL)
     {
@@ -59,7 +59,7 @@ class Parser
      *
      * @throws Exception (if RDF can't be parsed)
      *
-     * @return array Array of res\liblod\LODStatement objects
+     * @return array Array of bbcarchdev\liblod\LODStatement objects
      */
     public function parse($rdf, $type)
     {

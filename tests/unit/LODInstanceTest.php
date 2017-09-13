@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 
-use res\liblod\LOD;
-use res\liblod\LODInstance;
-use res\liblod\Rdf;
-use res\liblod\LODResource;
-use res\liblod\LODLiteral;
-use res\liblod\LODStatement;
+use bbcarchdev\liblod\LOD;
+use bbcarchdev\liblod\LODInstance;
+use bbcarchdev\liblod\Rdf;
+use bbcarchdev\liblod\LODResource;
+use bbcarchdev\liblod\LODLiteral;
+use bbcarchdev\liblod\LODStatement;
 
 use PHPUnit\Framework\TestCase;
 

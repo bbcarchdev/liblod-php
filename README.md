@@ -14,10 +14,8 @@ PHP 5.6 or higher (it works under PHP 7, but no features from PHP 7 are used).
 To install this library for use with your own code, do:
 
 ```
-composer require res/liblod
+composer require bbcarchdev/liblod
 ```
-
-???TODO
 
 ## Usage
 
@@ -25,8 +23,14 @@ See `liblod-php_usage.md` (in this directory).
 
 ## Developing the code
 
-To develop liblod-php, you'll need to install the dependencies. You can do this
-with:
+To develop liblod-php, clone the repo:
+
+```
+git clone https://github.com/bbcarchdev/liblod-php.git liblod-php
+cd liblod-php
+```
+
+Then you'll need to install the dependencies. You can do this with:
 
 ```
 php tools/composer.phar install
@@ -98,7 +102,9 @@ Implementation by [Elliot Smith](https://github.com/townxelliot).
 
 ## Contributing
 
-???TODO
+Contributions are welcome via [github pull requests](https://github.com/bbcarchdev/liblod-php).
+
+Please use the [github issue tracker](https://github.com/bbcarchdev/liblod-php/issues) to raise issues.
 
 ## Licence
 

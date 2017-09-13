@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-namespace res\liblod;
+namespace bbcarchdev\liblod;
 
 use \Exception;
 
@@ -26,7 +26,7 @@ use EasyRdf_Parser_Ntriples;
 use EasyRdf_Serialiser_Turtle;
 use EasyRdf_Namespace;
 
-use res\liblod\LOD;
+use bbcarchdev\liblod\LOD;
 
 /**
  * RDF helper.
@@ -72,7 +72,7 @@ class Rdf
      *
      * @param string $uri URI to expand
      * @param array $prefixes Associative array whose keys are prefixes and
-     * values are full URIs; defaults to res\liblod\Rdf::COMMON_PREFIXES
+     * values are full URIs; defaults to bbcarchdev\liblod\Rdf::COMMON_PREFIXES
      *
      * @return string
      */
@@ -92,12 +92,12 @@ class Rdf
     }
 
     /**
-     * Convert an EasyRdf_Graph into an array of res\liblod\LODStatement
+     * Convert an EasyRdf_Graph into an array of bbcarchdev\liblod\LODStatement
      * objects.
      *
      * @param EasyRdf_Graph $graph
      *
-     * @return res\liblod\LODStatement[]
+     * @return bbcarchdev\liblod\LODStatement[]
      */
     public function getTriples($graph)
     {

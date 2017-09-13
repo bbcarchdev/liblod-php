@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 
-namespace res\liblod;
+namespace bbcarchdev\liblod;
 
-use res\liblod\LODInstance;
-use res\liblod\HttpClient;
-use res\liblod\Parser;
-use res\liblod\Rdf;
+use bbcarchdev\liblod\LODInstance;
+use bbcarchdev\liblod\HttpClient;
+use bbcarchdev\liblod\Parser;
+use bbcarchdev\liblod\Rdf;
 
 use \ArrayAccess;
 use \Exception;
@@ -117,9 +117,9 @@ class LOD implements ArrayAccess
     /**
      * Constructor.
      *
-     * @param res\liblod\HttpClient $httpClient
-     * @param res\liblod\Parser $parser
-     * @param res\liblod\Rdf $rdf
+     * @param bbcarchdev\liblod\HttpClient $httpClient
+     * @param bbcarchdev\liblod\Parser $parser
+     * @param bbcarchdev\liblod\Rdf $rdf
      */
     public function __construct($httpClient = NULL, $parser = NULL, $rdf = NULL)
     {
@@ -403,7 +403,7 @@ class LOD implements ArrayAccess
 trait LODArrayAccess
 {
     /**
-     * For array access; passes control to res\liblod\LOD->resolve().
+     * For array access; passes control to bbcarchdev\liblod\LOD->resolve().
      * @param string $uri URI of LODInstance to get.
      * @return LODInstance|FALSE
      */

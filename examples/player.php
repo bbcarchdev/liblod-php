@@ -21,7 +21,7 @@
 // Get the mrss:player triple for a topic
 require_once(__DIR__ . '/../vendor/autoload.php');
 
-use res\liblod\LOD;
+use bbcarchdev\liblod\LOD;
 
 $lod = new LOD();
 $lod->setPrefix('mrss', 'http://search.yahoo.com/mrss/');

@@ -18,7 +18,7 @@
  */
 
 /* Unit tests for LODStatement */
-use res\liblod\LODStatement;
+use bbcarchdev\liblod\LODStatement;
 
 use PHPUnit\Framework\TestCase;
 

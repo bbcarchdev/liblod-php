@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
-namespace res\liblod;
+namespace bbcarchdev\liblod;
 
-use res\liblod\LODResponse;
+use bbcarchdev\liblod\LODResponse;
 
 use \GuzzleHttp\Psr7\UriResolver;
 use \GuzzleHttp\Psr7\Uri;
@@ -211,7 +211,7 @@ class HttpClient
      *
      * @param string $uri URI to fetch
      *
-     * @return res\liblod\LODResponse
+     * @return bbcarchdev\liblod\LODResponse
      */
     public function get($uri)
     {

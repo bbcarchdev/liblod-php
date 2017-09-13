@@ -17,13 +17,13 @@
  * limitations under the License.
  */
 
-namespace res\liblod;
+namespace bbcarchdev\liblod;
 
-use res\liblod\LODResource;
-use res\liblod\LODLiteral;
-use res\liblod\LODStatement;
-use res\liblod\LODTerm;
-use res\liblod\Rdf;
+use bbcarchdev\liblod\LODResource;
+use bbcarchdev\liblod\LODLiteral;
+use bbcarchdev\liblod\LODStatement;
+use bbcarchdev\liblod\LODTerm;
+use bbcarchdev\liblod\Rdf;
 
 /**
  * Represents a single RDF statement with subject, predicate and object.
@@ -32,33 +32,33 @@ class LODStatement
 {
     /**
      * Subject of the statement.
-     * @property res\liblod\LODResource $subject
+     * @property bbcarchdev\liblod\LODResource $subject
      */
     public $subject;
 
     /**
      * Predicate of the statement.
-     * @property res\liblod\LODResource $predicate
+     * @property bbcarchdev\liblod\LODResource $predicate
      */
     public $predicate;
 
     /**
      * Object of the statement.
-     * @property res\liblod\LODTerm $object
+     * @property bbcarchdev\liblod\LODTerm $object
      */
     public $object;
 
     /**
      * Constructor.
      *
-     * @param string|res\liblod\LODResource $subj Subject of the statement
-     * @param string|res\liblod\LODResource $pred Predicate of the statement
-     * @param array|res\liblod\LODTerm $objOrSpec Object of the statement;
+     * @param string|bbcarchdev\liblod\LODResource $subj Subject of the statement
+     * @param string|bbcarchdev\liblod\LODResource $pred Predicate of the statement
+     * @param array|bbcarchdev\liblod\LODTerm $objOrSpec Object of the statement;
      * $objOrSpec can either be a LODTerm instance or an options array like
      * [ 'value' => 'somestring', 'type' => 'uri|literal',
      *   'datatype' => 'xsd:...' || 'lang' => 'en' ]
      * @param array $prefixes Map from prefixes to full URIs
-     * @param res\liblod\Rdf $rdf RDF helper
+     * @param bbcarchdev\liblod\Rdf $rdf RDF helper
      */
     public function __construct($subj, $pred, $objOrSpec,
     $prefixes = Rdf::COMMON_PREFIXES, $rdf = NULL)

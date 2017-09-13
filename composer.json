@@ -1,6 +1,7 @@
 {
-    "name": "res/liblod",
-    "version": "0.0.1",
+    "name": "bbcarchdev/liblod",
+    "version": "0.1.0",
+    "stability": "beta",
     "type": "project",
     "license": "Apache v2",
     "description": "A LOD client library.",
@@ -12,7 +13,7 @@
     ],
     "autoload": {
       "psr-4": {
-        "res\\liblod\\": "src/"
+        "bbcarchdev\\liblod\\": "src/"
       }
     },
     "require": {

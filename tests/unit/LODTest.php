@@ -18,9 +18,9 @@
  */
 
 /* Unit tests for LOD */
-use res\liblod\LOD;
-use res\liblod\LODResponse;
-use res\liblod\Rdf;
+use bbcarchdev\liblod\LOD;
+use bbcarchdev\liblod\LODResponse;
+use bbcarchdev\liblod\Rdf;
 
 use PHPUnit\Framework\TestCase;
 

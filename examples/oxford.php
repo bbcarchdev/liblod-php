@@ -21,7 +21,7 @@
 // Get the topic "Oxford" and show related web pages
 require_once(__DIR__ . '/../vendor/autoload.php');
 
-use res\liblod\LOD;
+use bbcarchdev\liblod\LOD;
 
 $lod = new LOD();
 $lod->setPrefix('rdfs', 'http://www.w3.org/2000/01/rdf-schema#');

@@ -18,7 +18,7 @@
  */
 
 /* Unit tests for LOD */
-use res\liblod\Parser;
+use bbcarchdev\liblod\Parser;
 
 use PHPUnit\Framework\TestCase;
 

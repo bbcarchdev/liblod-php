@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-namespace res\liblod;
+namespace bbcarchdev\liblod;
 
 /**
  * Abstract class for RDF terms (URIs and literals).

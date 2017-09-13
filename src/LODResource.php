@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
-namespace res\liblod;
+namespace bbcarchdev\liblod;
 
-use res\liblod\LODTerm;
+use bbcarchdev\liblod\LODTerm;
 
 /**
  * An RDF URI.

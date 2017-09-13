@@ -18,7 +18,7 @@
  */
 
 /* Unit tests for HttpClient */
-use res\liblod\HttpClient;
+use bbcarchdev\liblod\HttpClient;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\HandlerStack;

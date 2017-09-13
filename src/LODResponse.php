@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-namespace res\liblod;
+namespace bbcarchdev\liblod;
 
 /**
  * A LODResponse is used by a LOD to encapsulate an HTTP response so

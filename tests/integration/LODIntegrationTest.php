@@ -18,7 +18,7 @@
  */
 
 /* Integration tests for LOD */
-use res\liblod\LOD;
+use bbcarchdev\liblod\LOD;
 
 use PHPUnit\Framework\TestCase;
 

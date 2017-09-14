@@ -3,6 +3,9 @@
 A Linked Open Data client library for PHP, developed as part of the
 [RES project](http://res.space/).
 
+It also works for Linked Data (without the "Open"), but was initially
+developed for LOD, and the name stuck.
+
 **Note that this is experimental code which is still under development.**
 
 ## Requirements
